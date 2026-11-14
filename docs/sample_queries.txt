@@ -1,0 +1,29 @@
+12 sample queries for the grade contract: 
+
+List all tables in my local Postgres database
+Show me the commits made on this repo yesterday
+Scan this repo’s history for leaked API keys or passwords
+Look up the Terraform getting-started docs
+Fetch the pricing page at this URL and give me the prices as a table
+Run my test suite in an isolated container and show any failures
+Find the spending report files and move them to a new folder called expenditure
+Create a new branch, commit my changes, and open a pull request
+List the open issues on this repo that I’m tagged in
+Open this repo’s issues page in a browser and take a screenshot
+Fill out the signup form on this page with test data and submit it
+Add the “bug” label to issue 42 and assign it to me
+
+12 more sample queries:
+
+What's inside the config folder of my project, including all its subfolders?
+Change the port from 8080 to 9090 in my server config file
+How big is backup.zip and when was it last changed?
+What have I changed since my last commit?
+What's different between my feature branch and main?
+What columns does the customers table have, and which ones can be left empty?
+Find customers who placed more than five orders last month and save them to a CSV file
+Summarize what reviewers said on pull request 128
+Open my local site at localhost:3000 and tell me if the browser console shows any errors
+Get the README of the psf/requests project on GitHub
+Spin up a throwaway Postgres 16 database in a container on port 5432
+Restart the api container and show me its logs since the restart
