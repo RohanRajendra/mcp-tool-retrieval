@@ -5,7 +5,7 @@ Queries 1 to 12 from `docs/sample_queries.txt`, judged against the real tool col
 **Relevance scale**
 
 - **3**: does the request, or one required step of a multi-step request, by itself.
-- **2**: does it partly, or only with extra steps.
+- **2**: does it partly, only with extra steps, or looks up something a step needs (like the user's login).
 - **1**: related, but cannot do the request.
 - **0**: not relevant.
 
@@ -57,7 +57,7 @@ BM25's top 10 contained 2 of the 4 relevant tools (grade 2 or 3) we found.
 
 ## 3. Scan this repo’s history for leaked API keys or passwords
 
-**Narrative.** The user wants to check every past commit in their repository for secrets committed by mistake, such as API keys or passwords, even ones deleted later. No tool in the collection scans for secrets directly. The closest tools show the content of past commits, so the agent must search that output for key-like patterns itself. Searching only the current files misses secrets that were removed in later commits.
+**Narrative.** The user wants to check every past commit in their repository for secrets committed by mistake, such as API keys or passwords, even ones deleted later. No tool in this starter collection scans for secrets directly. (GitHub's server has secret-scanning tools, but they are off by default, so they were not collected.) The closest tools show the content of past commits, so the agent must search that output for key-like patterns itself. Searching only the current files misses secrets that were removed in later commits.
 
 BM25's top 10 contained 0 of the 5 relevant tools (grade 2 or 3) we found.
 
@@ -84,7 +84,7 @@ BM25's top 10 contained 0 of the 5 relevant tools (grade 2 or 3) we found.
 
 ## 4. Look up the Terraform getting-started docs
 
-**Narrative.** The user wants to read HashiCorp's getting-started guide for Terraform. No URL is given and the collection has no web search tool, so no tool does this directly. Fetch tools and browsers can load the guide once the agent knows or finds its address. Docker's own documentation tool and tools unrelated to the web do not help.
+**Narrative.** The user wants to read HashiCorp's getting-started guide for Terraform. No URL is given, and this starter collection has no docs-lookup or web search tool, so no tool does this directly. Fetch tools and browsers can load the guide once the agent knows or finds its address. Docker's own documentation tool and tools unrelated to the web do not help.
 
 BM25's top 10 contained 0 of the 5 relevant tools (grade 2 or 3) we found.
 
@@ -202,14 +202,14 @@ BM25's top 10 contained 6 of the 12 relevant tools (grade 2 or 3) we found.
 
 ## 9. List the open issues on this repo that I’m tagged in
 
-**Narrative.** The user wants the open issues in their GitHub repository where they are @-mentioned or assigned. No tool in this GitHub server filters issues by who is mentioned, so no tool does it in one call. The agent can list or search open issues and filter them, after looking up the user's login. Browser and Docker tools do not help.
+**Narrative.** The user wants the open issues in their GitHub repository where they are @-mentioned or assigned. The GitHub server's issue search passes GitHub's search filters through, so one call with is:open and mentions: (or assignee:) can do it. Listing open issues and filtering them by hand also works, with extra steps. Looking up the user's login helps fill in the filter. Browser and Docker tools do not help.
 
 BM25's top 10 contained 2 of the 3 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
+| `search_issues` | GitHub (official) | 3 | find-issues | bm25 #3 | Accepts GitHub search filters like mentions: (per the server's code) |
 | `list_issues` | GitHub (official) | 2 | find-issues | bm25 #1 | Lists open issues; agent must filter by mention |
-| `search_issues` | GitHub (official) | 2 | find-issues | bm25 #3 | Plain-language issue search; no exact mention filter |
 | `get_me` | GitHub (official) | 2 | who-am-i | added by hand | Finds the user's login to filter on |
 | `issue_read` | GitHub (official) | 1 |  | added by hand | Reads one issue at a time |
 | `search_pull_requests` | GitHub (official) | 1 |  | bm25 #6 | Searches pull requests, not issues |

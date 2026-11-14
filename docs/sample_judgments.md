@@ -5,7 +5,7 @@ Ten of the 24 sample queries, judged against the real tool collection (`data/too
 **Relevance scale**
 
 - **3**: does the request, or one required step of a multi-step request, by itself.
-- **2**: does it partly, or only with extra steps.
+- **2**: does it partly, only with extra steps, or looks up something a step needs (like the user's login).
 - **1**: related, but cannot do the request.
 - **0**: not relevant.
 
