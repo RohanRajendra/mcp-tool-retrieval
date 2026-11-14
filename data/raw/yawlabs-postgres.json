@@ -1,0 +1,3405 @@
+{
+  "config": {
+    "id": "yawlabs-postgres",
+    "server_id": "io.github.YawLabs/postgres-mcp",
+    "category": "postgres",
+    "registry_name": "io.github.YawLabs/postgres-mcp",
+    "package_type": "npm",
+    "package": "@yawlabs/postgres-mcp",
+    "version": "0.13.12",
+    "image": "node:24-bookworm",
+    "setup": null,
+    "command": [
+      "npx",
+      "-y",
+      "@yawlabs/postgres-mcp@0.13.12"
+    ],
+    "env": {
+      "DATABASE_URL": "postgresql://postgres:collect@mcp-collect-pg:5432/postgres"
+    }
+  },
+  "image_digest": "node@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496",
+  "status": "ok",
+  "retrieved_at": "2026-11-14T01:53:25Z",
+  "server_name": "@yawlabs/postgres-mcp",
+  "server_version": "0.13.12",
+  "protocol_version": "2025-11-25",
+  "seconds": 1.7,
+  "tools": [
+    {
+      "name": "pg_readonly",
+      "title": "Run read-only SQL",
+      "description": "Run a SQL statement with no persistent data changes. Always executes inside a `BEGIN READ ONLY` transaction regardless of `ALLOW_WRITES`, so postgres itself rejects any INSERT/UPDATE/DELETE/DDL and the transaction is always rolled back. Use this whenever the goal is to read - SELECT, EXPLAIN, SHOW, VALUES, WITH ... SELECT, etc. Scope caveat for hosts that auto-allow this tool: `READ ONLY` constrains writes to the DATABASE, not every side effect. Functions whose effect is outside the table data - `pg_cancel_backend` / `pg_terminate_backend`, `pg_read_file`, `lo_export`, `COPY ... TO PROGRAM` - are NOT blocked here and are NOT behind the `ALLOW_WRITES` gate that `pg_kill` sits behind. They still require the privileges the `DATABASE_URL` role holds, so a least-privileged role (e.g. `pg_read_all_data`) is what actually bounds this tool. Use `params` for parameterized queries to avoid SQL injection. Params can be strings, numbers, booleans, null, arrays (for postgres arrays / ANY), or objects (for json/jsonb columns). Large result sets are truncated to POSTGRES_MAX_ROWS (default 1000) with a `truncated: true` flag.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000000,
+            "description": "The SQL statement to execute. Hard cap of 1 MB."
+          },
+          "params": {
+            "description": "Positional parameters referenced as $1, $2, ... in the SQL.",
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema0"
+            }
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "description": "Result rows, capped at POSTGRES_MAX_ROWS. Values are whatever JSON type pg parsed the column into."
+          },
+          "rowCount": {
+            "description": "Rows AFFECTED for DML -- not necessarily rows.length -- and rows returned on the cursor path. Null when pg reported no count.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "dataTypeID": {
+                  "type": "number"
+                },
+                "dataTypeName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "dataTypeID"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Result column descriptors, in select-list order."
+          },
+          "command": {
+            "description": "Postgres command tag (`INSERT`, `CREATE TABLE`, ...). Absent on the cursor path -- read absence as 'row-returning statement, command unknown'.",
+            "type": "string"
+          },
+          "truncated": {
+            "description": "Present and true only when the result hit POSTGRES_MAX_ROWS and rows were dropped.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rows",
+          "rowCount",
+          "fields"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Run read-only SQL",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_query",
+      "title": "Run SQL query",
+      "description": "Run a SQL query against the configured PostgreSQL database. Postgres itself is the primary safety gate: the role in `DATABASE_URL` enforces what queries can succeed. The recommended posture is a least-privileged role (e.g. one granted `pg_read_all_data`), which makes writes server-rejected regardless of any env var. `ALLOW_WRITES=1` is a secondary belt-and-braces gate - it lifts the in-server `BEGIN READ ONLY` wrapper, but it cannot grant privileges the role lacks. Useful for managed databases where creating a second role is awkward. For read-only access where you want the guarantee in the tool name, prefer `pg_readonly`. Use `params` for parameterized queries to avoid SQL injection. Params can be strings, numbers, booleans, null, arrays (for postgres arrays / ANY), or objects (for json/jsonb columns). Dates and UUIDs can be passed as ISO strings. Large result sets are truncated to POSTGRES_MAX_ROWS (default 1000) with a `truncated: true` flag.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000000,
+            "description": "The SQL statement to execute. Hard cap of 1 MB."
+          },
+          "params": {
+            "description": "Positional parameters referenced as $1, $2, ... in the SQL.",
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema0"
+            }
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "description": "Result rows, capped at POSTGRES_MAX_ROWS. Values are whatever JSON type pg parsed the column into."
+          },
+          "rowCount": {
+            "description": "Rows AFFECTED for DML -- not necessarily rows.length -- and rows returned on the cursor path. Null when pg reported no count.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "dataTypeID": {
+                  "type": "number"
+                },
+                "dataTypeName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "dataTypeID"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Result column descriptors, in select-list order."
+          },
+          "command": {
+            "description": "Postgres command tag (`INSERT`, `CREATE TABLE`, ...). Absent on the cursor path -- read absence as 'row-returning statement, command unknown'.",
+            "type": "string"
+          },
+          "truncated": {
+            "description": "Present and true only when the result hit POSTGRES_MAX_ROWS and rows were dropped.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rows",
+          "rowCount",
+          "fields"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Run SQL query",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_list_schemas",
+      "title": "List schemas",
+      "description": "List non-system schemas in the database. Excludes `pg_catalog`, `information_schema`, and other `pg_*` internals.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {}
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema_name": {
+                  "type": "string"
+                },
+                "owner": {
+                  "type": "string",
+                  "description": "Role name from pg_get_userbyid; never null, even for a dropped owner oid."
+                }
+              },
+              "required": [
+                "schema_name",
+                "owner"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "List schemas",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_list_tables",
+      "title": "List tables in a schema",
+      "description": "List tables (and optionally views) in a schema. Returns name, type (table/view/materialized view/foreign), and estimated row count (from `reltuples`; null = no ANALYZE yet on PG 14+; 0 may mean empty or unanalyzed on PG <= 13). Paginate via `limit`/`offset` on very large schemas.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "default": "public",
+            "description": "Schema name (defaults to 'public').",
+            "type": "string",
+            "minLength": 1
+          },
+          "includeViews": {
+            "default": false,
+            "description": "If true, include views and materialized views.",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 500,
+            "description": "Max rows to return (default 500, max 10000).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "offset": {
+            "default": 0,
+            "description": "Rows to skip for pagination (default 0).",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "table | view | materialized_view | foreign_table | partitioned_table, or the raw relkind."
+                },
+                "estimated_rows": {
+                  "description": "Estimate from reltuples. Null = never ANALYZEd (PG14+); on PG<=13 a never-analyzed table reports 0 instead, indistinguishable from empty.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "estimated_rows"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "List tables in a schema",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_describe_table",
+      "title": "Describe table",
+      "description": "Describe a relation: kind (table / view / materialized_view / partitioned_table / foreign_table), columns (name, type, nullable, default, `generated`, `identity`), primary key, foreign keys (outgoing), `referenced_by` (other tables whose FKs point at this one), `constraints` (CHECK / UNIQUE non-PK / EXCLUDE), indexes, and partition info (`partition_of` parent, `partitions` children). Works on views and materialized views too -- PK/FK/constraint/index lists will simply be empty for a plain view. Use `kind` to disambiguate before assuming you can write to the relation. Generated columns (`generated`: 'stored' / 'virtual') and `identity`: 'always' columns are NOT writable -- omit them from INSERT/UPDATE column lists; a generated column's expression is reported as `generation_expression`, never as `default_value`. On PostgreSQL 18+ constraints also report `validated` / `enforced` / `has_period`, and columns report `not_null_validated` -- a NOT VALID not-null constraint means `nullable: false` can still hide NULLs.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "default": "public",
+            "description": "Schema name (defaults to 'public').",
+            "type": "string",
+            "minLength": 1
+          },
+          "table": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Table name."
+          }
+        },
+        "required": [
+          "table"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string"
+          },
+          "table": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "description": "table | partitioned_table | view | materialized_view | foreign_table, or the raw relkind. Defaults to 'table' with a `_warnings` entry when the kind fetch failed."
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Formatted type, e.g. `character varying(64)`."
+                },
+                "nullable": {
+                  "type": "boolean",
+                  "description": "NOT attnotnull. On PG18+ read alongside `not_null_validated`."
+                },
+                "not_null_validated": {
+                  "description": "PostgreSQL 18+ only, absent below that. False means a NOT VALID not-null constraint, so `nullable: false` can still hide NULLs.",
+                  "type": "boolean"
+                },
+                "default_value": {
+                  "description": "Null for a generated column -- see generation_expression.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "generation_expression": {
+                  "description": "Null unless `generated` is set.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "generated": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "stored",
+                        "virtual"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Non-null means the column is NOT writable; omit it from INSERT/UPDATE column lists."
+                },
+                "identity": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "always",
+                        "by_default"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "'always' means the column is NOT writable without OVERRIDING SYSTEM VALUE."
+                },
+                "ordinal_position": {
+                  "type": "number",
+                  "description": "attnum, so dropped columns leave gaps."
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "nullable",
+                "default_value",
+                "generation_expression",
+                "generated",
+                "identity",
+                "ordinal_position"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "primary_key": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Key columns in declared order; INCLUDE columns are excluded."
+          },
+          "foreign_keys": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "constraint_name": {
+                  "type": "string"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "foreign_table": {
+                  "type": "string"
+                },
+                "foreign_schema": {
+                  "type": "string"
+                },
+                "foreign_columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "validated": {
+                  "type": "boolean",
+                  "description": "False for a NOT VALID constraint: existing rows were never checked against it."
+                },
+                "enforced": {
+                  "description": "PostgreSQL 18+ only, absent below that. False means the constraint is recorded but enforces nothing -- do not lean on it as a guarantee.",
+                  "type": "boolean"
+                },
+                "has_period": {
+                  "description": "PostgreSQL 18+ only, absent below that. True for a temporal (PERIOD / WITHOUT OVERLAPS) key.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "constraint_name",
+                "columns",
+                "foreign_table",
+                "foreign_schema",
+                "foreign_columns",
+                "validated"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "referenced_by": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "constraint_name": {
+                  "type": "string"
+                },
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "referenced_columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "validated": {
+                  "type": "boolean",
+                  "description": "False for a NOT VALID constraint: existing rows were never checked against it."
+                },
+                "enforced": {
+                  "description": "PostgreSQL 18+ only, absent below that. False means the constraint is recorded but enforces nothing -- do not lean on it as a guarantee.",
+                  "type": "boolean"
+                },
+                "has_period": {
+                  "description": "PostgreSQL 18+ only, absent below that. True for a temporal (PERIOD / WITHOUT OVERLAPS) key.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "constraint_name",
+                "schema",
+                "table",
+                "columns",
+                "referenced_columns",
+                "validated"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Other tables whose foreign keys point AT this one."
+          },
+          "constraints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "check | unique | exclude, or the raw contype."
+                },
+                "definition": {
+                  "type": "string"
+                },
+                "validated": {
+                  "type": "boolean",
+                  "description": "False for a NOT VALID constraint: existing rows were never checked against it."
+                },
+                "enforced": {
+                  "description": "PostgreSQL 18+ only, absent below that. False means the constraint is recorded but enforces nothing -- do not lean on it as a guarantee.",
+                  "type": "boolean"
+                },
+                "has_period": {
+                  "description": "PostgreSQL 18+ only, absent below that. True for a temporal (PERIOD / WITHOUT OVERLAPS) key.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "definition",
+                "validated"
+              ],
+              "additionalProperties": false
+            },
+            "description": "CHECK / non-PK UNIQUE / EXCLUDE only; PK and FK have their own lists."
+          },
+          "indexes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "definition": {
+                  "type": "string"
+                },
+                "is_unique": {
+                  "type": "boolean"
+                },
+                "is_primary": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "definition",
+                "is_unique",
+                "is_primary"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "partition_of": {
+            "description": "Present only when this relation is itself a partition.",
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "table"
+            ],
+            "additionalProperties": false
+          },
+          "partitions": {
+            "description": "Present only when this relation is a partitioned parent WITH children.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                },
+                "bound": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema",
+                "table",
+                "bound"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "schema",
+          "table",
+          "kind",
+          "columns",
+          "primary_key",
+          "foreign_keys",
+          "referenced_by",
+          "constraints",
+          "indexes"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Describe table",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_list_views",
+      "title": "List views with definitions",
+      "description": "List views and materialized views in a schema with their SQL definitions. Use this over `pg_list_tables` with `includeViews: true` when you want the view body, not just names.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "default": "public",
+            "description": "Schema name (defaults to 'public').",
+            "type": "string",
+            "minLength": 1
+          },
+          "includeMaterialized": {
+            "default": true,
+            "description": "If true, include materialized views.",
+            "type": "boolean"
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "view",
+                    "materialized_view"
+                  ]
+                },
+                "definition": {
+                  "type": "string",
+                  "description": "Reconstructed view body from pg_get_viewdef."
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "definition"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "List views with definitions",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_list_functions",
+      "title": "List functions and procedures",
+      "description": "List functions, procedures, and aggregates in a schema. Returns name, arguments, return type, kind (function/procedure/aggregate/window), and implementation language.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "default": "public",
+            "description": "Schema name (defaults to 'public').",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "arguments": {
+                  "type": "string",
+                  "description": "Reconstructed argument list; empty string for a zero-argument routine."
+                },
+                "return_type": {
+                  "description": "Null for procedures, which have no return type.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "function | procedure | aggregate | window, or the raw prokind."
+                },
+                "language": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "arguments",
+                "return_type",
+                "kind",
+                "language"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "List functions and procedures",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_list_extensions",
+      "title": "List installed extensions",
+      "description": "List installed PostgreSQL extensions. Returns name, version, schema, and description. Useful to check for pgvector, postgis, pg_stat_statements, uuid-ossp, etc. before writing queries that rely on them.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {}
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Installed extversion, e.g. `1.11` -- not the postgres version."
+                },
+                "schema": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "version",
+                "schema",
+                "description"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "List installed extensions",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_search_columns",
+      "title": "Search columns by name",
+      "description": "Search for columns by name across all user schemas. Supports SQL LIKE patterns (`%` matches any substring, `_` matches one character). Case-insensitive. Use this instead of iterating `pg_describe_table` when the user asks 'which tables have X'.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "description": "LIKE pattern. Use '%' for wildcard: 'user_id', '%email%', 'created_%'."
+          },
+          "schema": {
+            "description": "Limit to this schema. If omitted, searches all user schemas.",
+            "type": "string",
+            "minLength": 1
+          },
+          "limit": {
+            "default": 100,
+            "description": "Max rows to return (default 100).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "pattern"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string",
+                  "description": "Relation name; may be a view or materialized view, not only a table."
+                },
+                "column": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Formatted type from format_type."
+                },
+                "nullable": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "schema",
+                "table",
+                "column",
+                "type",
+                "nullable"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Search columns by name",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_explain",
+      "title": "Explain query plan",
+      "description": "Get the query plan for a SQL statement. By default, this uses plain EXPLAIN (no execution). Set `analyze: true` to run the query with EXPLAIN ANALYZE - for non-SELECT statements, ALLOW_WRITES=1 is required (since ANALYZE actually executes the statement). Writes executed during EXPLAIN ANALYZE are rolled back, so you can inspect a plan for an INSERT/UPDATE/DELETE without persisting the rows -- but only what Postgres rolls back is undone: a sequence the statement advanced (nextval, a serial or identity column) stays advanced, and any side effect of a function the statement called that lands outside table data (pg_terminate_backend, an advisory lock) persists. Format is `text` (default) or `json`. Pass the raw SQL (not an EXPLAIN-prefixed statement). Planner options (all optional): `buffers` reports shared/local/temp block hits and is the fastest way to tell a bad plan from a cold cache - it defaults to TRUE whenever `analyze` is true (matching PostgreSQL 18, which turns it on for you), pass `buffers: false` to suppress it; requesting it WITHOUT `analyze` needs PostgreSQL 13+. `verbose` adds output columns and schema-qualified names. `settings` (PostgreSQL 12+) lists planner GUCs set away from their defaults - the usual explanation for a plan that looks impossible. `wal` (PostgreSQL 13+) reports WAL generated and `serialize` (`none`|`text`|`binary`, PostgreSQL 17+) charges the cost of building the result rows; both require `analyze`. `memory` (PostgreSQL 17+) reports memory used by the PLANNER, so it works with or without `analyze` - use it alone to ask why planning a statement is expensive. `generic_plan` (PostgreSQL 16+) plans a parameterized statement WITHOUT values for its $1/$2 placeholders and cannot be combined with `analyze` or `params`. `costs` and `timing` default to true (as in postgres); set either to false to drop those columns, and note `timing` only applies with `analyze`. Options that need a newer server than the one connected are rejected with an explicit error naming the required version instead of a confusing parse failure. Set `hypothetical_indexes` to a list of `{table, columns, using?}` to ask the planner 'what would the plan be if these indexes existed?' -- requires the HypoPG extension (`CREATE EXTENSION hypopg`). The hypothetical indexes are torn down at the end of the call, never touching real disk.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000000,
+            "description": "The SQL statement to explain. Do NOT prefix with EXPLAIN."
+          },
+          "analyze": {
+            "default": false,
+            "description": "Run EXPLAIN ANALYZE (actually executes the query).",
+            "type": "boolean"
+          },
+          "format": {
+            "default": "text",
+            "description": "Output format.",
+            "type": "string",
+            "enum": [
+              "text",
+              "json"
+            ]
+          },
+          "buffers": {
+            "description": "Report buffer hits/reads/dirtied. Defaults to TRUE when `analyze` is true (PostgreSQL 18 does the same); pass false to suppress. Requesting it without `analyze` requires PostgreSQL 13+.",
+            "type": "boolean"
+          },
+          "verbose": {
+            "default": false,
+            "description": "Include output columns, schema-qualified names, and triggers.",
+            "type": "boolean"
+          },
+          "settings": {
+            "default": false,
+            "description": "Report planner GUCs set away from their defaults - explains a weird plan (PostgreSQL 12+).",
+            "type": "boolean"
+          },
+          "wal": {
+            "default": false,
+            "description": "Report WAL generated by the statement. Requires `analyze` (PostgreSQL 13+).",
+            "type": "boolean"
+          },
+          "memory": {
+            "default": false,
+            "description": "Report memory used by the planner (PostgreSQL 17+). Works with or without `analyze`, since planning happens either way.",
+            "type": "boolean"
+          },
+          "serialize": {
+            "description": "Charge the cost of serializing result rows (network-bound queries hide it otherwise). Requires `analyze` (PostgreSQL 17+).",
+            "type": "string",
+            "enum": [
+              "none",
+              "text",
+              "binary"
+            ]
+          },
+          "generic_plan": {
+            "default": false,
+            "description": "Plan the statement with UNKNOWN values for its $1/$2 placeholders - the plan a prepared statement would get. Cannot be combined with `analyze` or `params` (PostgreSQL 16+).",
+            "type": "boolean"
+          },
+          "costs": {
+            "default": true,
+            "description": "Include estimated cost/rows/width. Set false for a terser plan.",
+            "type": "boolean"
+          },
+          "timing": {
+            "default": true,
+            "description": "Include per-node actual timing. Setting it to false REQUIRES `analyze: true` (it is rejected otherwise, not silently ignored); false lowers measurement overhead.",
+            "type": "boolean"
+          },
+          "params": {
+            "description": "Positional parameters referenced as $1, $2, ... in the SQL.",
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "hypothetical_indexes": {
+            "description": "List of indexes the planner should pretend exist for this EXPLAIN. Requires the HypoPG extension. Indexes are session-scoped and reset at the end of the call.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 127,
+                  "description": "Target table. Use `schema.table` (e.g. `public.users`) or just `table` for the search_path."
+                },
+                "columns": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "Column names in index order. Quoted identifiers are not supported here -- pass plain names."
+                },
+                "using": {
+                  "default": "btree",
+                  "description": "Index access method. btree is the right answer for almost every query.",
+                  "type": "string",
+                  "enum": [
+                    "btree",
+                    "hash",
+                    "gin",
+                    "gist",
+                    "brin",
+                    "spgist"
+                  ]
+                }
+              },
+              "required": [
+                "table",
+                "columns"
+              ]
+            }
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "$defs": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "plan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ],
+            "description": "Newline-joined plan text for `format: \"text\"` (with a trailing truncation marker when POSTGRES_MAX_ROWS chopped it), or the parsed plan array for `format: \"json\"`."
+          }
+        },
+        "required": [
+          "plan"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Explain query plan",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_index_advisor",
+      "title": "Recommend indexes for a workload",
+      "description": "Recommend indexes for a workload, and prove each one pays for itself before recommending it. Give it `statements` (the SQL you care about) or let it take the top N from `pg_stat_statements`; it plans each statement, generates candidate indexes, costs them with HypoPG hypothetical indexes, and returns only the ones that measurably cut estimated cost.\nHow candidates are generated, and the honest limit: this tool has NO SQL parser and does not read your SQL text. It EXPLAINs each statement and harvests the columns the PLANNER reports as filters, join keys, and sort keys, then intersects those tokens with the real column list from `pg_attribute` -- so a candidate can never name a column that does not exist. The extraction is deliberately loose (a token matching a real column name on a different table can slip through); HypoPG is the arbiter, and anything that does not lower cost is discarded. Column ORDER within each candidate is equality columns first (most selective first, from `pg_stats`), then at most one range column, then sort columns.\nThe search is greedy and BOUNDED. Each accepted index stays in place while the rest are re-costed on top of it, so later picks account for what earlier ones already fixed. `max_candidates` caps how many candidates are considered and `max_explains` caps total EXPLAIN round trips; when a cap stops the search early, `budget_exhausted` is true and the result is a truncated search, not a converged one.\nPostgreSQL 18 note, and it reverses a rule you have probably internalized: PG18 added B-tree SKIP SCAN, so a multi-column index whose LEADING column the query never constrains CAN now be used. The classic 'leading column never filtered means the index is useless' heuristic is wrong on PG18+. This tool gates that prune on the server version -- on PG18+ such candidates are kept and costed (`skip_scan_available: true`, and an accepted one carries `requires_skip_scan`), below PG18 they are pruned as unusable and counted in `candidates_pruned_leading_column`.\nRequires the HypoPG extension (`CREATE EXTENSION hypopg;`). Hypothetical indexes are session-scoped and are reset before the call returns, on the success and the failure path alike, so they never touch disk and never leak into a later query plan. Statements are only ever EXPLAINed, never executed, inside a `BEGIN READ ONLY` transaction.\nCosts are PLANNER ESTIMATES, not measurements: they are the right way to compare two plans for the same statement and the wrong way to predict wall-clock time. They are weighted by `calls` when the workload came from pg_stat_statements, so a query run a million times outranks an identical one run twice. Validate a recommendation with `pg_explain` before creating it, and create it with CONCURRENTLY in production (`create_statement_concurrently`).",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "statements": {
+            "description": "The workload to optimize. When omitted, the top `limit` statements from pg_stat_statements are used instead (and weighted by their call counts).",
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000000
+            }
+          },
+          "limit": {
+            "default": 10,
+            "description": "How many statements to pull from pg_stat_statements. Ignored when `statements` is given.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "schema": {
+            "description": "Only recommend indexes on tables in this schema. Candidates elsewhere are dropped.",
+            "type": "string",
+            "minLength": 1
+          },
+          "max_candidates": {
+            "default": 20,
+            "description": "Cap on candidate indexes considered. Candidates are ranked by table sequential-scan count first.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "max_explains": {
+            "default": 150,
+            "description": "Cap on EXPLAIN round trips spent searching (baseline plans are not counted). The search stops when the next candidate would exceed it and reports `budget_exhausted: true`.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "max_index_columns": {
+            "default": 3,
+            "description": "Widest candidate index to consider. Every narrower prefix is considered too.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "max_recommendations": {
+            "default": 5,
+            "description": "Stop after this many accepted indexes, even if more would still help.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "min_improvement": {
+            "default": 0.1,
+            "description": "Fraction of total weighted workload cost an index must remove to be accepted (0.1 = 10%). Relative rather than absolute so it means the same thing on a small and a large database.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "description": "`schema.table`, as the planner reported it."
+                },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Key columns in index order."
+                },
+                "using": {
+                  "type": "string",
+                  "description": "Access method. Always btree -- see the tool description."
+                },
+                "create_statement": {
+                  "type": "string"
+                },
+                "create_statement_concurrently": {
+                  "type": "string",
+                  "description": "The production form. CONCURRENTLY cannot run inside a transaction block."
+                },
+                "estimated_size_bytes": {
+                  "description": "Bigint as a decimal string, from hypopg_relation_size. Null when the estimate failed.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "workload_cost_before": {
+                  "type": "number",
+                  "description": "Weighted total workload cost before this index."
+                },
+                "workload_cost_after": {
+                  "type": "number"
+                },
+                "workload_cost_reduction_pct": {
+                  "type": "number"
+                },
+                "requires_skip_scan": {
+                  "type": "boolean",
+                  "description": "True when the leading column is never constrained by the workload, so this index relies on PostgreSQL 18 skip scan. Never true below PG18, where such candidates are pruned instead."
+                },
+                "helps_statements": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "statement": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Index into the top-level `statements` array."
+                      },
+                      "cost_before": {
+                        "type": "number"
+                      },
+                      "cost_after": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "statement",
+                      "cost_before",
+                      "cost_after"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "table",
+                "columns",
+                "using",
+                "create_statement",
+                "create_statement_concurrently",
+                "estimated_size_bytes",
+                "workload_cost_before",
+                "workload_cost_after",
+                "workload_cost_reduction_pct",
+                "requires_skip_scan",
+                "helps_statements"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "statements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sql": {
+                  "type": "string",
+                  "description": "Truncated to 300 characters."
+                },
+                "calls": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string. '1' for a caller-supplied statement."
+                },
+                "baseline_cost": {
+                  "description": "Null when the statement could not be planned.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "planned": {
+                  "type": "boolean",
+                  "description": "False when EXPLAIN failed; see `_warnings` for why."
+                }
+              },
+              "required": [
+                "sql",
+                "calls",
+                "baseline_cost",
+                "planned"
+              ],
+              "additionalProperties": false
+            },
+            "description": "The workload as analyzed, in the order `helps_statements.statement` indexes into."
+          },
+          "baseline_workload_cost": {
+            "type": "number",
+            "description": "Weighted total estimated cost before any recommendation."
+          },
+          "final_workload_cost": {
+            "type": "number",
+            "description": "Weighted total after applying every recommendation."
+          },
+          "candidates_considered": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "candidates_pruned_leading_column": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Multi-column candidates dropped by the pre-PG18 leading-column rule. Always 0 on PG18+."
+          },
+          "explains_used": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "EXPLAIN round trips spent searching, excluding baseline plans."
+          },
+          "explain_budget": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "budget_exhausted": {
+            "type": "boolean",
+            "description": "True when `max_explains` stopped the search before it converged."
+          },
+          "skip_scan_available": {
+            "type": "boolean",
+            "description": "True on PostgreSQL 18+, where B-tree skip scan exists."
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "recommendations",
+          "statements",
+          "baseline_workload_cost",
+          "final_workload_cost",
+          "candidates_considered",
+          "candidates_pruned_leading_column",
+          "explains_used",
+          "explain_budget",
+          "budget_exhausted",
+          "skip_scan_available"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Recommend indexes for a workload",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_health",
+      "title": "Database health snapshot",
+      "description": "Quick health snapshot: server version, database size, connection counts measured against `max_connections`, active queries with their wait events, a pg_stat_database rollup, and table count. Useful as a connection sanity check and to spot runaway queries, connection-cap pressure, and lock/IO waits.\n- connections: `total` for the CURRENT database, broken down into `active` / `idle` / `idle_in_transaction` / `idle_in_transaction_aborted` / `other` (starting, fastpath function call, disabled) / `state_unavailable` -- those six sum to `total`. `idle_in_transaction_aborted` is called out separately because it holds locks and blocks vacuum while doing no work and will never commit. `state_unavailable` counts sessions whose `state` reads NULL because the role lacks pg_read_all_stats / pg_monitor membership; a non-zero value means every other bucket is under-counted by at least that much, so do NOT read `active: 0` next to it as an idle database. Plus `cluster_client_backends` (client backends across ALL databases -- those are what actually consume connection slots), `max_connections`, `superuser_reserved_connections`, and `used_fraction` (cluster_client_backends / max_connections). A raw connection count means nothing without the cap; read `used_fraction` first.\n- active_queries: `pid`, `state`, `query`, `application_name`, `backend_type`, `wait_event_type` / `wait_event` (both NULL when the backend is running rather than waiting -- the single most diagnostic pair in pg_stat_activity). Both are reported verbatim as the server spells them, and that spelling changes between majors: a backend waiting on a buffer pin reports `wait_event_type` 'BufferPin' through PostgreSQL 18 and 'Buffer' from 19 on, with the `wait_event` names beneath it changing to match. Read them against the reported `version` rather than hard-coding a literal. `duration_seconds` (since query_start) and `transaction_age_seconds` (since xact_start). A large transaction_age_seconds next to a small duration_seconds is a long-open transaction, the usual root cause behind lock waits, bloat, and stalled autovacuum.\n- database_stats: pg_stat_database for the current database -- `deadlocks`, `temp_files` / `temp_bytes` (work_mem spills), `conflicts` (recovery conflicts, only ever non-zero on a replica), `blks_hit` / `blks_read` / `cache_hit_ratio`, and `stats_reset`. Every counter is CUMULATIVE since stats_reset, not a rate -- interpret them against that timestamp.\nSub-queries that fail (several of these are permission-gated on managed providers) append to `_warnings` and leave their field null; the rest of the snapshot still returns.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "activeQueryLimit": {
+            "default": 10,
+            "description": "Max active queries to return (default 10, max 100).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "description": "Always true on a success response -- the version probe answered."
+          },
+          "version": {
+            "description": "Full `version()` banner. Absent (with a `_warnings` entry) if the row came back without it.",
+            "type": "string"
+          },
+          "database": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "database": {
+                    "type": "string"
+                  },
+                  "size_pretty": {
+                    "type": "string"
+                  },
+                  "size_bytes": {
+                    "type": "string",
+                    "description": "Bigint as a decimal string -- past 2^53 a JS number would lose digits."
+                  }
+                },
+                "required": [
+                  "database",
+                  "size_pretty",
+                  "size_bytes"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "connections": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "string",
+                    "description": "Sessions in the CURRENT database. The six state buckets below sum to this."
+                  },
+                  "active": {
+                    "type": "string"
+                  },
+                  "idle": {
+                    "type": "string"
+                  },
+                  "idle_in_transaction": {
+                    "type": "string"
+                  },
+                  "idle_in_transaction_aborted": {
+                    "type": "string",
+                    "description": "Holds locks and blocks vacuum while doing no work, and can never commit."
+                  },
+                  "other": {
+                    "type": "string",
+                    "description": "Catch-all: starting, fastpath function call, disabled, plus any future state."
+                  },
+                  "state_unavailable": {
+                    "type": "string",
+                    "description": "Sessions whose `state` read NULL for lack of pg_read_all_stats / pg_monitor. Non-zero means every other bucket is under-counted -- do NOT read `active: 0` beside it as an idle database."
+                  },
+                  "cluster_client_backends": {
+                    "type": "string",
+                    "description": "Client backends across ALL databases -- the ones that actually consume connection slots."
+                  },
+                  "max_connections": {
+                    "type": "number"
+                  },
+                  "superuser_reserved_connections": {
+                    "type": "number"
+                  },
+                  "used_fraction": {
+                    "description": "cluster_client_backends / max_connections. Null only if max_connections read as 0.",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "total",
+                  "active",
+                  "idle",
+                  "idle_in_transaction",
+                  "idle_in_transaction_aborted",
+                  "other",
+                  "state_unavailable",
+                  "cluster_client_backends",
+                  "max_connections",
+                  "superuser_reserved_connections",
+                  "used_fraction"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active_queries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pid": {
+                  "type": "number"
+                },
+                "state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "duration_seconds": {
+                  "description": "Since query_start.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "transaction_age_seconds": {
+                  "description": "Since xact_start; null outside a transaction block. Large here beside a small duration_seconds is a long-open transaction.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "xact_start": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "wait_event_type": {
+                  "description": "Null when the backend is RUNNING rather than waiting. Spelling changes between majors ('BufferPin' through PG18, 'Buffer' from 19) -- read it against `version`.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "wait_event": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "backend_type": {
+                  "type": "string"
+                },
+                "query": {
+                  "type": "string"
+                },
+                "application_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pid",
+                "state",
+                "duration_seconds",
+                "transaction_age_seconds",
+                "xact_start",
+                "wait_event_type",
+                "wait_event",
+                "backend_type",
+                "query",
+                "application_name"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Empty array both when nothing is running and when the fetch failed -- check `_warnings`."
+          },
+          "database_stats": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "deadlocks": {
+                    "type": "string"
+                  },
+                  "temp_files": {
+                    "type": "string"
+                  },
+                  "temp_bytes": {
+                    "type": "string"
+                  },
+                  "temp_bytes_pretty": {
+                    "type": "string"
+                  },
+                  "conflicts": {
+                    "type": "string",
+                    "description": "Recovery conflicts; only ever non-zero on a replica."
+                  },
+                  "blks_hit": {
+                    "type": "string"
+                  },
+                  "blks_read": {
+                    "type": "string"
+                  },
+                  "cache_hit_ratio": {
+                    "description": "Null on a freshly reset database (both counters 0).",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "stats_reset": {
+                    "description": "Every counter here is cumulative SINCE this timestamp. Null = never reset.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "deadlocks",
+                  "temp_files",
+                  "temp_bytes",
+                  "temp_bytes_pretty",
+                  "conflicts",
+                  "blks_hit",
+                  "blks_read",
+                  "cache_hit_ratio",
+                  "stats_reset"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when pg_stat_database is unreadable OR has no row for this database."
+          },
+          "table_count": {
+            "description": "User tables and partitioned tables, as a decimal string.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "connected",
+          "active_queries",
+          "database_stats"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Database health snapshot",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_top_queries",
+      "title": "Top queries by execution time",
+      "description": "Top N queries by total or mean execution time. Requires the `pg_stat_statements` extension to be installed and enabled (most managed Postgres providers have it on by default). Returns `{rows, stats_reset, stats_reset_age_seconds, dealloc}`: each row has normalized query text (constants replaced with `?`), call count, total/mean/min/max time in ms, rows returned, and cache hit ratio. Use this to find slow queries worth optimizing.\n`calls` and `total_time_ms` are cumulative since the last `pg_stat_statements_reset()`, so this ranking only describes the window that started at the top-level `stats_reset` (with `stats_reset_age_seconds` beside it). This is pg_stat_statements' OWN reset clock, read from `pg_stat_statements_info` -- it is independent of the `stats_reset` reported by `pg_seq_scan_tables` / `pg_unused_indexes`, which comes from pg_stat_database, so do not compare the two timestamps or assume one implies the other. `stats_reset: null` means the start of the window is unknown, not that it covers all time.\nREAD `dealloc` BEFORE TRUSTING THE RANKING: it counts how many times entries for the LEAST-EXECUTED statements were evicted because more distinct statements were seen than `pg_stat_statements.max` allows. A non-zero `dealloc` means this ranking is drawn from an INCOMPLETE population -- queries may be missing from these results entirely, and an evicted query's counters restart from zero if it runs again, understating it. The larger `dealloc` is, the more churn, so 'not in the top N' stops being evidence that a query is cheap. Raise `pg_stat_statements.max` to get a complete picture.\nOn pg_stat_statements < 1.9 (before Postgres 14) `pg_stat_statements_info` does not exist, so `stats_reset`, `stats_reset_age_seconds` and `dealloc` are omitted entirely rather than returned as nulls, and a `_warnings` entry says so.\nOn pg_stat_statements >= 1.10 (Postgres 15+), also returns `io_read_time_ms` and `io_write_time_ms` to separate IO-bound from CPU-bound queries (null when track_io_timing = off or the query did no measurable IO -- enable track_io_timing in postgresql.conf to get non-null values). Scoped to the database in DATABASE_URL: pg_stat_statements is cluster-wide, so results are filtered by `dbid` to match every other tool here rather than leaking query text from unrelated databases sharing the cluster.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "orderBy": {
+            "default": "total_time",
+            "description": "Ranking: total_time (cumulative impact), mean_time (worst per-call), or calls (hottest).",
+            "type": "string",
+            "enum": [
+              "total_time",
+              "mean_time",
+              "calls"
+            ]
+          },
+          "limit": {
+            "default": 20,
+            "description": "Number of rows to return (default 20).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Normalized text: constants replaced with `?`."
+                },
+                "calls": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string."
+                },
+                "total_time_ms": {
+                  "type": "number"
+                },
+                "mean_time_ms": {
+                  "type": "number"
+                },
+                "min_time_ms": {
+                  "type": "number"
+                },
+                "max_time_ms": {
+                  "type": "number"
+                },
+                "rows": {
+                  "type": "string",
+                  "description": "Rows returned or affected, bigint as a decimal string."
+                },
+                "hit_percent": {
+                  "description": "Null when the statement touched no shared blocks at all.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "io_read_time_ms": {
+                  "description": "pg_stat_statements >= 1.10 only, absent below that. Null means track_io_timing is off OR the query did no measurable IO.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "io_write_time_ms": {
+                  "description": "See io_read_time_ms.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "query",
+                "calls",
+                "total_time_ms",
+                "mean_time_ms",
+                "min_time_ms",
+                "max_time_ms",
+                "rows",
+                "hit_percent"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "stats_reset": {
+            "description": "pg_stat_statements' OWN reset clock, independent of the pg_stat_database one the table/index tools report -- never compare the two. Absent below extension 1.9.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stats_reset_age_seconds": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "dealloc": {
+            "description": "Times least-executed entries were evicted for exceeding pg_stat_statements.max. Non-zero means this ranking is drawn from an INCOMPLETE population. Absent below extension 1.9.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Top queries by execution time",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_seq_scan_tables",
+      "title": "Find tables with heavy sequential scans",
+      "description": "Tables with high sequential-scan counts relative to index scans - the first place to look for missing-index candidates. Returns `{rows, stats_reset, stats_reset_age_seconds}`: each row has seq_scans, idx_scans, live tuples, and the ratio. A high ratio on a large table usually means a query is reading the whole table where an index would suffice. Pair with `pg_top_queries` to find which query is doing it.\nThese counters are cumulative since the last statistics reset, so every ratio here is only meaningful relative to the top-level `stats_reset` (and `stats_reset_age_seconds`). A ratio measured over a window that was reset minutes ago describes that window, not the workload; `stats_reset: null` means the start of the window is unknown.\nOn PostgreSQL 16+ each row also carries `last_seq_scan` and `last_idx_scan` timestamps (null = no such scan since the reset), which separate 'scanned hard months ago' from 'being scanned right now' in a way the raw counts cannot.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "description": "Limit to one schema. If omitted, all user schemas are included.",
+            "type": "string",
+            "minLength": 1
+          },
+          "minSize": {
+            "default": 1000,
+            "description": "Minimum live tuple count to include (default 1000, filters out tiny/empty tables).",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "default": 20,
+            "description": "Max rows to return (default 20).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                },
+                "seq_scans": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string."
+                },
+                "idx_scans": {
+                  "type": "string",
+                  "description": "COALESCEd to '0', so a never-index-scanned table reads as 0, not null."
+                },
+                "live_tuples": {
+                  "type": "string"
+                },
+                "seq_tup_read": {
+                  "type": "string"
+                },
+                "ratio": {
+                  "description": "seq_scans / idx_scans; null when idx_scans is 0 (division guard).",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "last_seq_scan": {
+                  "description": "PostgreSQL 16+ only, absent below that. Null = no sequential scan since the reset.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_idx_scan": {
+                  "description": "PostgreSQL 16+ only, absent below that. Null = no index scan since the reset.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "schema",
+                "table",
+                "seq_scans",
+                "idx_scans",
+                "live_tuples",
+                "seq_tup_read",
+                "ratio"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "stats_reset": {
+            "description": "Every counter in `rows` is cumulative SINCE this point. Null = start of the window unknown.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stats_reset_age_seconds": {
+            "description": "Seconds since `stats_reset`; null whenever that is null.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "rows",
+          "stats_reset",
+          "stats_reset_age_seconds"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Find tables with heavy sequential scans",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_unused_indexes",
+      "title": "Find unused indexes",
+      "description": "Indexes that have never been scanned or have very low usage, largest first. Each unused index costs write amplification (every INSERT/UPDATE maintains it) and disk space, so before adding a new index, check whether the fix is to drop a dead one. Returns `{rows, stats_reset, stats_reset_age_seconds}`.\nREAD THIS BEFORE RECOMMENDING A DROP: `scans` is a counter, not a verdict. It only counts since the last statistics reset, which is why the top-level `stats_reset` and `stats_reset_age_seconds` are part of the answer. If the counters were reset an hour ago, EVERY index looks unused; if `stats_reset` is null, the start of the window is unknown and the counts prove nothing. This list is only trustworthy once the reset age comfortably exceeds the slowest cycle that could use the index - a monthly report, a quarterly close, a yearly job, a failover-only query path.\nPRIMARY KEY and UNIQUE indexes are already excluded from these results: they enforce a constraint and stay load-bearing at zero scans, so they never appear here and their absence is not evidence of anything.\nOn PostgreSQL 16+ each row also carries `last_idx_scan`, the timestamp of the most recent scan (null = never scanned since the reset). 'Not scanned since 2026-02-14' is a far better basis for a decision than a bare count.\nOn PostgreSQL 18+, do not fall back on the old 'the leading column is never filtered, so this index is dead weight' reasoning. Skip scan lets the planner use a multi-column btree whose leading column is unconstrained, so such an index can now be doing real work.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "description": "Limit to one schema. If omitted, all user schemas are included.",
+            "type": "string",
+            "minLength": 1
+          },
+          "maxScans": {
+            "default": 10,
+            "description": "Include indexes with scan count <= this (default 10). Use 0 for 'never scanned'.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "default": 50,
+            "description": "Max rows to return (default 50).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                },
+                "index": {
+                  "type": "string"
+                },
+                "scans": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string. A COUNTER, not a verdict -- read stats_reset first."
+                },
+                "size_pretty": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "string"
+                },
+                "definition": {
+                  "type": "string"
+                },
+                "last_idx_scan": {
+                  "description": "PostgreSQL 16+ only, absent below that. Null = never scanned since the reset. Far better grounds for a drop decision than the bare count.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "schema",
+                "table",
+                "index",
+                "scans",
+                "size_pretty",
+                "size_bytes",
+                "definition"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "stats_reset": {
+            "description": "Every counter in `rows` is cumulative SINCE this point. Null = start of the window unknown.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stats_reset_age_seconds": {
+            "description": "Seconds since `stats_reset`; null whenever that is null.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "rows",
+          "stats_reset",
+          "stats_reset_age_seconds"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Find unused indexes",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_io_stats",
+      "title": "I/O statistics and in-flight async I/O",
+      "description": "I/O observability: cumulative per-backend-type I/O from `pg_stat_io` (PostgreSQL 16+), plus in-flight asynchronous I/O handles from `pg_aios` (PostgreSQL 18+). This is the layer underneath `pg_top_queries` and `pg_health` -- it says WHICH subsystem is doing the I/O (client backends vs autovacuum vs checkpointer vs walwriter) and through which path, which a per-query or per-table view cannot.\n- io: one row per (`backend_type`, `io_object`, `io_context`) combination. Counters `reads` / `writes` / `extends` / `writebacks` / `hits` / `evictions` / `reuses` / `fsyncs` are bigints returned as decimal strings; `read_time_ms` / `write_time_ms` / `writeback_time_ms` / `extend_time_ms` / `fsync_time_ms` are float8 milliseconds. A timing of 0 next to a non-zero op count means `track_io_timing` is off, NOT that the I/O was free -- turn it on to get real numbers. A NULL counter means the operation is not possible for that combination, which is different from 0.\n- io[].read_bytes / write_bytes / extend_bytes: a normalized byte figure that means the same thing on every supported server. On PG16-17 it is computed as `op_bytes * <op count>`; on PG18 `op_bytes` was removed and the server reports bytes directly. The top-level `byte_accounting` field says which source produced the numbers.\n- io[].stats_reset: these are CUMULATIVE counters, so a row is only interpretable next to its reset point. Reported per row because that is how the view reports it; `pg_stat_reset_shared('io')` resets them together in practice, but this tool does not assert that.\n- Rows whose counters are all zero are omitted by default (`pg_stat_io` is mostly zeros on a quiet system, and the noise buries the handful of rows that matter). Pass `includeZeroRows: true` for the full matrix.\n- in_flight + io_method: PostgreSQL 18+ ONLY, and both keys are ABSENT on older servers rather than empty/null -- an empty `in_flight` array would read as 'nothing is stalled' when the truth is 'this server cannot tell you'. `in_flight` is live, currently-outstanding async I/O (`pid`, `io_id`, `op`, `state`, `off`, `length`, `target_desc`), which is what you want while a stall is happening rather than after it. `io_method` (`worker` / `io_uring` / `sync`) explains what `in_flight` can contain: with `io_method = sync` there is no asynchronous submission, so the array is legitimately empty no matter how much I/O is running.\nRequires PostgreSQL 16+. Sub-queries that fail (`pg_stat_io` and `pg_aios` are permission-gated on some managed providers) append to `_warnings` and set their field to null; the rest of the response still returns.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "includeZeroRows": {
+            "default": false,
+            "description": "If true, return every (backend_type, io_object, io_context) row including the ones with no recorded activity. Default false -- the view is mostly zeros on a quiet system.",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 200,
+            "description": "Max rows per section (default 200). pg_stat_io has well under 200 combinations, so this effectively bounds the in-flight list on a busy PG18 server.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "server_version_num": {
+            "type": "number",
+            "description": "Echoed so a caller can tell WHY the PG18-only keys are absent without a second round-trip."
+          },
+          "byte_accounting": {
+            "type": "string",
+            "description": "Which source produced read_bytes / write_bytes / extend_bytes: native columns, or op_bytes * ops."
+          },
+          "include_zero_rows": {
+            "type": "boolean",
+            "description": "Echoed because it changes what an empty `io` means: no recorded I/O, vs the view returned nothing."
+          },
+          "io": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "backend_type": {
+                      "type": "string"
+                    },
+                    "io_object": {
+                      "type": "string",
+                      "description": "The view's `object` column, renamed -- it is a postgres keyword."
+                    },
+                    "io_context": {
+                      "type": "string",
+                      "description": "The view's `context` column, renamed for symmetry with io_object."
+                    },
+                    "reads": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "read_bytes": {
+                      "description": "Source named by the top-level `byte_accounting`.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "read_time_ms": {
+                      "description": "0 next to a non-zero op count means track_io_timing is OFF, not that the I/O was free.",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "writes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "write_bytes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "write_time_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "writebacks": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "writeback_time_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "extends": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "extend_bytes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "extend_time_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "hits": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "evictions": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "reuses": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "fsyncs": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "fsync_time_ms": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "stats_reset": {
+                      "description": "These counters are cumulative SINCE this point. Null = never reset.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "backend_type",
+                    "io_object",
+                    "io_context",
+                    "reads",
+                    "read_bytes",
+                    "read_time_ms",
+                    "writes",
+                    "write_bytes",
+                    "write_time_ms",
+                    "writebacks",
+                    "writeback_time_ms",
+                    "extends",
+                    "extend_bytes",
+                    "extend_time_ms",
+                    "hits",
+                    "evictions",
+                    "reuses",
+                    "fsyncs",
+                    "fsync_time_ms",
+                    "stats_reset"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null (not []) when the fetch was refused -- [] is a real answer on a freshly reset cluster."
+          },
+          "io_method": {
+            "description": "PostgreSQL 18+ only. worker | io_uring | sync. With `sync` there is no async submission, so `in_flight` is legitimately empty however much I/O is running.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "in_flight": {
+            "description": "PostgreSQL 18+ only. Currently-outstanding async I/O. Null (not []) when the fetch was refused -- reading a denial as 'nothing outstanding' would point the investigation the wrong way.",
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pid": {
+                      "type": "number",
+                      "description": "Line this up against pg_health / pg_inspect_locks output for the same backend."
+                    },
+                    "io_id": {
+                      "type": "number"
+                    },
+                    "op": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "state": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "off": {
+                      "description": "File offset, cast to text so a widened column stays lossless.",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "length": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "target_desc": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pid",
+                    "io_id",
+                    "op",
+                    "state",
+                    "off",
+                    "length",
+                    "target_desc"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "server_version_num",
+          "byte_accounting",
+          "include_zero_rows",
+          "io"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "I/O statistics and in-flight async I/O",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_inspect_locks",
+      "title": "Inspect blocking locks",
+      "description": "Show current lock contention: which sessions are blocked and who is blocking them. Returns blocked PID, blocking PID, lock types, relation being contested, and the queries involved. Use this first when a tool call hangs or the app feels stuck - it's the fastest way to identify a long-held transaction holding a lock. Row shape: one row per (blocked_pid, blocking_pid) pair. A session waiting on multiple blockers appears on multiple rows -- group/deduplicate by `blocked_pid` if you want a per-blocked-session count. Scope: CLUSTER-WIDE, unlike `pg_health` active_queries, which is filtered to the database in DATABASE_URL. Lock waits cross databases (a shared catalog, a long transaction in a sibling database), so the blocker is not always somewhere this connection could see -- but it does mean a row here may name a pid in another database entirely. `relation` is only resolved for locks in the CURRENT database or on a cluster-shared catalog (pg_authid, pg_database, ...); it is NULL for a lock held in another database, because a pg_class OID is only meaningful within its own database. A NULL `relation` has TWO unrelated causes, and `lock_type` is what tells them apart. When the wait is ON a relation (`lock_type` relation / extend / page / tuple), NULL means the lock is held in another database and cannot be named from here. When the wait is on something else (`transactionid` / `virtualxid` / `advisory`), `relation` was only ever a best-effort hint -- an alphabetical guess among the blocker's held write-intent locks, not authoritative -- so NULL there means the guess found no candidate, and the blocker is very likely LOCAL. Do not read that second case as 'somewhere else': use `blocking_pid` and `blocking_query`, which are populated either way. Note also that pg_cancel_backend / pg_terminate_backend signal by PID across the whole cluster, so even a genuinely cross-database blocker is actionable via `pg_kill`. Use the blocked/blocking query text to disambiguate which table is actually contested.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "limit": {
+            "default": 50,
+            "description": "Max blocked/blocker pairs (default 50).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "blocked_pid": {
+                  "type": "number"
+                },
+                "blocked_user": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "blocked_query": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "blocked_duration_seconds": {
+                  "description": "Since query_start.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "blocking_pid": {
+                  "type": "number"
+                },
+                "blocking_user": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "blocking_query": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "blocking_state": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "blocking_duration_seconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "relation": {
+                  "description": "schema.table. NULL has two causes, told apart by `lock_type`: on a relation wait (relation / extend / page / tuple) NULL means the lock is held in ANOTHER database and cannot be named from here; on a transactionid / virtualxid / advisory wait this field was only ever a best-effort GUESS among the blocker's held write-intent locks, so NULL means the guess found nothing and the blocker is very likely LOCAL. Never authoritative on the guess path -- disambiguate with the query text.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "lock_type": {
+                  "type": "string",
+                  "description": "pg_locks.locktype: relation, transactionid, virtualxid, tuple, ..."
+                }
+              },
+              "required": [
+                "blocked_pid",
+                "blocked_user",
+                "blocked_query",
+                "blocked_duration_seconds",
+                "blocking_pid",
+                "blocking_user",
+                "blocking_query",
+                "blocking_state",
+                "blocking_duration_seconds",
+                "relation",
+                "lock_type"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Inspect blocking locks",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_list_roles",
+      "title": "List roles",
+      "description": "List database roles (users and groups) with their login/superuser/createdb/createrole attributes and inherited role memberships. Use this to answer 'who has access to this database?' without needing to read `pg_authid` directly.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "includeSystem": {
+            "default": false,
+            "description": "If true, include built-in `pg_*` roles (pg_read_all_data, pg_monitor, etc.).",
+            "type": "boolean"
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "can_login": {
+                  "type": "boolean",
+                  "description": "False for a group role."
+                },
+                "superuser": {
+                  "type": "boolean"
+                },
+                "createdb": {
+                  "type": "boolean"
+                },
+                "createrole": {
+                  "type": "boolean"
+                },
+                "replication": {
+                  "type": "boolean"
+                },
+                "bypass_rls": {
+                  "type": "boolean"
+                },
+                "member_of": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Roles this one is a direct member of; empty when none."
+                }
+              },
+              "required": [
+                "name",
+                "can_login",
+                "superuser",
+                "createdb",
+                "createrole",
+                "replication",
+                "bypass_rls",
+                "member_of"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "List roles",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_table_privileges",
+      "title": "Show table privileges",
+      "description": "Show which roles have which privileges (SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER) on a table or on every table in a schema. If `table` is omitted, the result spans every table in `schema`, ordered by table then grantee. Use this to answer 'who can write to this table?' or to audit schema-wide access before a migration. Visibility caveat: backed by `information_schema.table_privileges`, which postgres filters by what the calling role can see. A least-privileged role may not see grants involving unrelated third-party roles. For a complete picture, run as a superuser or a member of `pg_read_all_data`.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "default": "public",
+            "description": "Schema name (defaults to 'public').",
+            "type": "string",
+            "minLength": 1
+          },
+          "table": {
+            "description": "Table name. Omit to list privileges for all tables in the schema.",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "table": {
+                  "type": "string"
+                },
+                "grantee": {
+                  "type": "string",
+                  "description": "Role name, or PUBLIC."
+                },
+                "privilege_type": {
+                  "type": "string",
+                  "description": "SELECT | INSERT | UPDATE | DELETE | TRUNCATE | REFERENCES | TRIGGER."
+                },
+                "is_grantable": {
+                  "type": "boolean",
+                  "description": "True when the grantee may pass this privilege on (WITH GRANT OPTION)."
+                }
+              },
+              "required": [
+                "table",
+                "grantee",
+                "privilege_type",
+                "is_grantable"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Show table privileges",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_kill",
+      "title": "Cancel or terminate a backend",
+      "description": "Cancel a running query (SIGINT-equivalent) or terminate a backend connection (SIGTERM-equivalent) by PID. Find the PID via `pg_health` active_queries or `pg_inspect_locks`. Requires ALLOW_WRITES=1 since this changes database session state. The role in DATABASE_URL must have permission - cancelling another user's query needs the `pg_signal_backend` role or superuser. Note: `pg_signal_backend` does NOT cover superuser-owned backends - only a superuser can signal another superuser's session. Cancel is graceful; terminate is forceful. `signaled=true` means postgres SENT the signal, not that the target stopped: a session that is idle (or idle in a transaction) ignores a cancel, so re-check with `pg_health` and use `terminate` for an idle session. `signaled=false` means postgres found no backend with that PID; the `note` field carries its own warning (e.g. 'PID 123 is not a PostgreSQL backend process'). A permission denial is NOT a `false`: postgres raises, so the call returns an error with SQLSTATE 42501 that says what the role lacks.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Backend PID to signal."
+          },
+          "mode": {
+            "default": "cancel",
+            "description": "`cancel` aborts the current query; `terminate` closes the connection entirely.",
+            "type": "string",
+            "enum": [
+              "cancel",
+              "terminate"
+            ]
+          }
+        },
+        "required": [
+          "pid"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "number",
+            "description": "Echoed back from the request."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "cancel",
+              "terminate"
+            ],
+            "description": "Echoed back, after the safer 'cancel' default is applied."
+          },
+          "signaled": {
+            "type": "boolean",
+            "description": "What pg_cancel_backend / pg_terminate_backend returned: true once the signal is SENT, not once it has taken effect."
+          },
+          "note": {
+            "type": "string",
+            "description": "On `signaled: false`, postgres's own warning explaining why -- act on this, not on the boolean."
+          }
+        },
+        "required": [
+          "pid",
+          "mode",
+          "signaled",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Cancel or terminate a backend",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_replication_status",
+      "title": "Replication status",
+      "description": "Replication overview: configured replication slots, connected replicas (from `pg_stat_replication`), and current WAL position. Use on primary to spot lagging or disconnected replicas, on replicas to see upstream status. Returns empty arrays on a standalone (non-replicated) database rather than erroring.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {}
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "is_replica": {
+            "description": "pg_is_in_recovery(). Null means the probe failed, NOT 'primary'.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "wal_position": {
+            "description": "Last received LSN on a replica, current LSN on a primary. Null when the probe failed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slot_name": {
+                  "type": "string"
+                },
+                "slot_type": {
+                  "type": "string",
+                  "description": "physical | logical."
+                },
+                "active": {
+                  "type": "boolean",
+                  "description": "False means nothing is consuming the slot -- WAL piles up behind it."
+                },
+                "restart_lsn": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "confirmed_flush_lsn": {
+                  "description": "Logical slots only; null on a physical slot.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "wal_status": {
+                  "description": "reserved | extended | unreserved | lost.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "database": {
+                  "description": "Logical slots only; null on a physical slot.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "plugin": {
+                  "description": "Logical slots only; null on a physical slot.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "slot_name",
+                "slot_type",
+                "active",
+                "restart_lsn",
+                "confirmed_flush_lsn",
+                "wal_status",
+                "database",
+                "plugin"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Empty both on a standalone database and when the fetch failed -- check `_warnings`."
+          },
+          "replicas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "application_name": {
+                  "type": "string"
+                },
+                "client_addr": {
+                  "description": "Null for a replica connected over a unix socket.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "state": {
+                  "type": "string",
+                  "description": "startup | catchup | streaming | backup | stopping."
+                },
+                "sync_state": {
+                  "type": "string",
+                  "description": "async | potential | sync | quorum."
+                },
+                "write_lag_seconds": {
+                  "description": "Null until the primary has measured a round trip.",
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "flush_lag_seconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "replay_lag_seconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "application_name",
+                "client_addr",
+                "state",
+                "sync_state",
+                "write_lag_seconds",
+                "flush_lag_seconds",
+                "replay_lag_seconds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "is_replica",
+          "wal_position",
+          "slots",
+          "replicas"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Replication status",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_advisor",
+      "title": "Database advisor (DBA lints)",
+      "description": "Rolled-up DBA lint pass. One call returns four categories of findings:\n- sequence_exhaustion: SERIAL / BIGSERIAL / IDENTITY sequences whose `last_value` is above `seqExhaustionThreshold` of `max_value`. The classic incident class.\n- wraparound_risk: transaction-ID AND multixact wraparound pressure, the classic pageable incident. `{autovacuum_freeze_max_age, autovacuum_multixact_freeze_max_age, databases[], tables[]}`. Those two cluster GUCs are the divisors both lists are measured against (null if unreadable). Multixact IDs are a SEPARATE 32-bit counter, consumed by row-level locking (`SELECT ... FOR SHARE/UPDATE`, FK checks), so a lock-heavy workload can exhaust them while relfrozenxid stays perfectly healthy -- both counters are checked here. `databases` rows: `{database, xid_age (age(datfrozenxid)), mxid_age (mxid_age(datminmxid)), pct_of_freeze_max_age, pct_of_multixact_freeze_max_age, triggered_by}` -- template databases included, since template0 ages like any other and the cluster horizon is the minimum across all of them. `tables` rows: `{schema, table, relkind, xid_age (age(relfrozenxid)), freeze_max_age, pct_of_freeze_max_age, mxid_age (mxid_age(relminmxid)), multixact_freeze_max_age, pct_of_multixact_freeze_max_age, triggered_by}`, where `freeze_max_age` / `multixact_freeze_max_age` are the EFFECTIVE limits -- a per-table `autovacuum_freeze_max_age` / `autovacuum_multixact_freeze_max_age` storage parameter wins over the GUC. A row is returned when EITHER ratio is at or above `wraparoundThreshold`, and `triggered_by` ('xid' | 'multixact' | 'both') says which one did it: 'xid' means chase freezing/autovacuum, 'multixact' means chase the lock-heavy workload burning members. `mxid_age` and `pct_of_multixact_freeze_max_age` are null on rows whose minmxid is InvalidMultiXactId (no multixact ever recorded); such rows can only be xid-triggered. At pct_of_freeze_max_age 1.0 autovacuum forces an anti-wraparound VACUUM, and near 2.1 billion xids (or 4.2 billion multixacts) the server stops accepting writes. `tables` deliberately includes pg_catalog and pg_toast relations -- the culprit is more often a TOAST table or a system catalog than a user table. On PG18+ table rows also carry `pages` / `all_frozen_pages` / `frozen_page_fraction` from `pg_class.relallfrozen` (visibility-map freeze coverage); those three keys are ABSENT on older servers rather than null.\n- tables_without_primary_key: user tables (plain and partitioned) with no PK defined. Bloat candidates and a sign of design drift; some replication setups also need PKs. Foreign tables are excluded -- PostgreSQL forbids declaring PKs on foreign tables.\n- public_tables_without_rls: tables in `public` (or any schema in `rlsSchemas`) with row-level security disabled. Useful as a security baseline check.\nAny category whose query fails (permission-gated catalogs on managed providers) appends to `_warnings` and returns empty; the other categories still return.\nUse this as the 'what should I be looking at?' starting point, then drill into `pg_unused_indexes`, `pg_table_bloat`, `pg_seq_scan_tables` for the perf side.",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "seqExhaustionThreshold": {
+            "default": 0.5,
+            "description": "Minimum used-fraction (last_value / max_value) to flag a sequence (default 0.5 = 50%).",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "wraparoundThreshold": {
+            "default": 0.5,
+            "description": "Minimum used-fraction to flag a database or table for wraparound risk (default 0.5 = 50%). Applied to BOTH ratios -- age(frozenxid) / autovacuum_freeze_max_age and mxid_age(minmxid) / autovacuum_multixact_freeze_max_age -- and a row is flagged if either one clears it. 1.0 is where autovacuum starts forcing anti-wraparound VACUUMs.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "rlsSchemas": {
+            "default": [
+              "public"
+            ],
+            "description": "Schemas where RLS-missing should be flagged. Defaults to ['public'].",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "limit": {
+            "default": 50,
+            "description": "Max rows per category (default 50).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "sequence_exhaustion": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sequence": {
+                  "type": "string"
+                },
+                "last_value": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string."
+                },
+                "max_value": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string."
+                },
+                "pct_used": {
+                  "type": "number",
+                  "description": "last_value / max_value, rounded for display. The FILTER runs at full precision, so a displayed 0.5000 can sit just above the threshold."
+                }
+              },
+              "required": [
+                "schema",
+                "sequence",
+                "last_value",
+                "max_value",
+                "pct_used"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "wraparound_risk": {
+            "type": "object",
+            "properties": {
+              "autovacuum_freeze_max_age": {
+                "description": "Cluster GUC; the divisor for the xid ratios.",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "autovacuum_multixact_freeze_max_age": {
+                "description": "Cluster GUC; the divisor for the multixact ratios.",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "databases": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "database": {
+                      "type": "string",
+                      "description": "Template databases included -- template0 ages like any other."
+                    },
+                    "xid_age": {
+                      "type": "number",
+                      "description": "age(datfrozenxid)."
+                    },
+                    "mxid_age": {
+                      "description": "mxid_age(datminmxid). Null when no multixact was ever recorded.",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "pct_of_freeze_max_age": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "pct_of_multixact_freeze_max_age": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "triggered_by": {
+                      "type": "string",
+                      "enum": [
+                        "xid",
+                        "multixact",
+                        "both"
+                      ],
+                      "description": "'xid' -> chase freezing/autovacuum; 'multixact' -> chase the lock-heavy workload burning members."
+                    }
+                  },
+                  "required": [
+                    "database",
+                    "xid_age",
+                    "mxid_age",
+                    "pct_of_freeze_max_age",
+                    "pct_of_multixact_freeze_max_age",
+                    "triggered_by"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "tables": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "schema": {
+                      "type": "string"
+                    },
+                    "table": {
+                      "type": "string"
+                    },
+                    "relkind": {
+                      "type": "string",
+                      "description": "Raw relkind: 'r' heap, 'm' materialized view, 't' TOAST -- the only three checked."
+                    },
+                    "xid_age": {
+                      "type": "number",
+                      "description": "age(relfrozenxid)."
+                    },
+                    "freeze_max_age": {
+                      "type": "number",
+                      "description": "EFFECTIVE limit: a per-table storage parameter wins over the cluster GUC."
+                    },
+                    "pct_of_freeze_max_age": {
+                      "description": "At 1.0 autovacuum forces an anti-wraparound VACUUM.",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "mxid_age": {
+                      "description": "mxid_age(relminmxid). Null when no multixact was ever recorded.",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "multixact_freeze_max_age": {
+                      "type": "number",
+                      "description": "EFFECTIVE limit, resolved the same way as freeze_max_age."
+                    },
+                    "pct_of_multixact_freeze_max_age": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "triggered_by": {
+                      "type": "string",
+                      "enum": [
+                        "xid",
+                        "multixact",
+                        "both"
+                      ],
+                      "description": "'xid' -> chase freezing/autovacuum; 'multixact' -> chase the lock-heavy workload burning members."
+                    },
+                    "pages": {
+                      "description": "PostgreSQL 18+ only, absent below that. relpages.",
+                      "type": "number"
+                    },
+                    "all_frozen_pages": {
+                      "description": "PostgreSQL 18+ only, absent below that. relallfrozen.",
+                      "type": "number"
+                    },
+                    "frozen_page_fraction": {
+                      "description": "PostgreSQL 18+ only, absent below that. Null when relpages is 0, not when coverage is 0.",
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "schema",
+                    "table",
+                    "relkind",
+                    "xid_age",
+                    "freeze_max_age",
+                    "pct_of_freeze_max_age",
+                    "mxid_age",
+                    "multixact_freeze_max_age",
+                    "pct_of_multixact_freeze_max_age",
+                    "triggered_by"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "Deliberately includes pg_catalog and pg_toast -- the culprit is usually one of those."
+              }
+            },
+            "required": [
+              "autovacuum_freeze_max_age",
+              "autovacuum_multixact_freeze_max_age",
+              "databases",
+              "tables"
+            ],
+            "additionalProperties": false
+          },
+          "tables_without_primary_key": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema",
+                "table"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Plain and partitioned tables only; foreign tables cannot have a PK and are excluded."
+          },
+          "public_tables_without_rls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "schema",
+                "table"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "sequence_exhaustion",
+          "wraparound_risk",
+          "tables_without_primary_key",
+          "public_tables_without_rls"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Database advisor (DBA lints)",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "pg_table_bloat",
+      "title": "Estimate table bloat",
+      "description": "Estimate table bloat (dead tuples + free space) for tables in a schema. Returns live tuples, dead tuples, dead-tuple ratio, last_vacuum / last_autovacuum timestamps, and total relation size. A high dead_ratio with a stale last_autovacuum is a sign a table needs VACUUM.\nOn PostgreSQL 19+ every row also carries `stats_reset`: the last time THAT relation's counters were reset via `pg_stat_reset_single_table_counters()`. Read it before trusting anything else in the row -- a reset zeroes live_tuples and dead_tuples AND clears last_vacuum / last_autovacuum / last_analyze together, so a table reset a minute ago is indistinguishable from a pristine one without it. The key is ABSENT on older servers rather than null; null on PG19+ means this relation's counters have never been reset.\n\nThree methods are available via the `method` parameter:\n- `estimate` (default): reads pg_stat_user_tables -- fast, no extensions, ANALYZE-driven approximations. Use this first.\n- `approx`: uses pgstattuple_approx() -- fast sampling pass, more accurate than estimates, requires the pgstattuple extension.\n- `exact`: uses pgstattuple() -- full table scan, exact counts, slow on large tables, requires the pgstattuple extension. Always pass `schema` with method='exact' -- scanning all user tables in one statement will hit statement_timeout on non-trivial databases.\nInstall pgstattuple with `CREATE EXTENSION pgstattuple` (requires superuser).",
+      "inputSchema": {
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "schema": {
+            "description": "Limit to one schema. If omitted, all user schemas are included.",
+            "type": "string",
+            "minLength": 1
+          },
+          "minDeadRatio": {
+            "default": 0.1,
+            "description": "Minimum dead-tuple fraction to include - dead / (live + dead). Default 0.1 = 10%.",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "limit": {
+            "default": 50,
+            "description": "Max rows to return (default 50).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "method": {
+            "default": "estimate",
+            "description": "Bloat measurement method. 'estimate' (default) uses pg_stat_user_tables (fast, no extensions). 'approx' uses pgstattuple_approx() (fast sampling, more accurate). 'exact' uses pgstattuple() (full scan, exact but slow). Both 'approx' and 'exact' require the pgstattuple extension.",
+            "type": "string",
+            "enum": [
+              "estimate",
+              "approx",
+              "exact"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "table": {
+                  "type": "string"
+                },
+                "live_tuples": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string."
+                },
+                "dead_tuples": {
+                  "type": "string",
+                  "description": "Bigint as a decimal string."
+                },
+                "dead_ratio": {
+                  "type": "number",
+                  "description": "dead / (live + dead), bounded [0, 1]. Rows with both counters at 0 are filtered."
+                },
+                "size_pretty": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "string"
+                },
+                "last_vacuum": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_autovacuum": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_analyze": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "stats_reset": {
+                  "description": "PostgreSQL 19+ only, absent below that. When THIS relation's counters were last reset by pg_stat_reset_single_table_counters() -- which zeroes the tuple counts AND clears every last_* timestamp together. Null on PG19+ means never reset.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "schema",
+                "table",
+                "live_tuples",
+                "dead_tuples",
+                "dead_ratio",
+                "size_pretty",
+                "size_bytes",
+                "last_vacuum",
+                "last_autovacuum",
+                "last_analyze"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "title": "Estimate table bloat",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    }
+  ]
+}
