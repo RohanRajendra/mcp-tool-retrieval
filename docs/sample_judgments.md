@@ -9,9 +9,11 @@ Ten of the 24 sample queries, judged against the real tool collection (`data/too
 - **1**: related, but cannot do the request.
 - **0**: not relevant.
 
+Each tool gets the highest grade that fits.
+
 **Equivalent tools** that do the same job share a group name (for example `file-metadata`), even when they come from different vendors.
 
-**Which tools were judged:** for each query, the top 10 results of a plain keyword search (BM25 over tool name and description), plus tools added by hand that can do the job but the search missed.
+**Which tools were judged:** for each query, the top 10 results of a plain keyword search (BM25 over tool name and description), plus tools the judge added during judging because the search missed them.
 
 ## 1. List all tables in my local Postgres database
 
@@ -25,9 +27,9 @@ BM25's top 10 contained 4 of the 5 relevant tools (grade 2 or 3) we found.
 | `pg_list_tables` | Postgres (YawLabs) | 3 | list-tables | bm25 #8 | Lists tables in a schema |
 | `pg_query` | Postgres (YawLabs) | 2 | run-sql | bm25 #3 | Works, but needs a hand-written catalog query |
 | `pg_readonly` | Postgres (YawLabs) | 2 | run-sql | bm25 #4 | Same as pg_query, read-only |
-| `query` | Postgres (antonorlov) | 2 | run-sql | added by hand | Works, but needs a hand-written catalog query |
+| `query` | Postgres (antonorlov) | 2 | run-sql | added during judging | Works, but needs a hand-written catalog query |
 | `list_schemas` | Postgres (antonorlov) | 1 |  | bm25 #1 | Lists schemas, not tables |
-| `pg_list_schemas` | Postgres (YawLabs) | 1 |  | added by hand | Lists schemas, not tables |
+| `pg_list_schemas` | Postgres (YawLabs) | 1 |  | added during judging | Lists schemas, not tables |
 | `pg_list_roles` | Postgres (YawLabs) | 0 |  | bm25 #7 | Lists users and roles |
 | `pg_top_queries` | Postgres (YawLabs) | 0 |  | bm25 #6 | Query performance stats |
 | `pg_advisor` | Postgres (YawLabs) | 0 |  | bm25 #9 | Database health checks |
@@ -42,8 +44,8 @@ BM25's top 10 contained 2 of the 4 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `git_log` | Git (reference) | 3 | commit-history | added by hand | Commit log with start and end time filters |
-| `git_log` | Git (cyanheads) | 3 | commit-history | added by hand | Commit history with since/until filters |
+| `git_log` | Git (reference) | 3 | commit-history | added during judging | Commit log with start and end time filters |
+| `git_log` | Git (cyanheads) | 3 | commit-history | added during judging | Commit history with since/until filters |
 | `list_commits` | GitHub (official) | 3 | commit-history | bm25 #5 | Lists commits on GitHub with since/until |
 | `search_commits` | GitHub (official) | 2 | commit-history | bm25 #6 | Date search works, but default branch only |
 | `git_show` | Git (cyanheads) | 1 |  | bm25 #7 | Shows one commit; needs its ID first |
@@ -66,9 +68,9 @@ BM25's top 10 contained 4 of the 7 relevant tools (grade 2 or 3) we found.
 | `container_run` | Docker (L337-org) | 3 | run-new-container | bm25 #7 | Runs a new container and can wait for the result |
 | `compose_run` | Docker (L337-org) | 2 | run-new-container | bm25 #8 | Works only with a Compose file; output fetched separately |
 | `container_exec` | Docker (L337-org) | 2 | run-in-running-container | bm25 #4 | Runs a command, but needs a running container |
-| `exec_command` | Docker (ofershap) | 2 | run-in-running-container | added by hand | Runs a command, but needs a running container |
-| `container_logs` | Docker (L337-org) | 2 | container-output | added by hand | Shows the test output after a detached run |
-| `container_logs` | Docker (ofershap) | 2 | container-output | added by hand | Shows the test output after a detached run |
+| `exec_command` | Docker (ofershap) | 2 | run-in-running-container | added during judging | Runs a command, but needs a running container |
+| `container_logs` | Docker (L337-org) | 2 | container-output | added during judging | Shows the test output after a detached run |
+| `container_logs` | Docker (ofershap) | 2 | container-output | added during judging | Shows the test output after a detached run |
 | `compose_logs` | Docker (L337-org) | 2 | container-output | bm25 #9 | Shows output of a Compose run |
 | `container_start` | Docker (L337-org) | 1 |  | bm25 #10 | Starts an existing container; cannot create one |
 | `container_list` | Docker (L337-org) | 0 |  | bm25 #1 | Lists containers |
@@ -85,13 +87,13 @@ BM25's top 10 contained 5 of the 8 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `search_files` | Filesystem (reference) | 3 | find-by-name | added by hand | Finds files by name pattern |
+| `search_files` | Filesystem (reference) | 3 | find-by-name | added during judging | Finds files by name pattern |
 | `find_files` | Filesystem (j0hanz) | 3 | find-by-name | bm25 #6 | Finds files by name pattern |
-| `create_directory` | Filesystem (reference) | 3 | make-folder | added by hand | Creates the new folder |
+| `create_directory` | Filesystem (reference) | 3 | make-folder | added during judging | Creates the new folder |
 | `create` | Filesystem (j0hanz) | 3 | make-folder | bm25 #8 | Creates folders (and files) |
 | `move_file` | Filesystem (reference) | 3 | move-file | bm25 #1 | Moves a file |
 | `move` | Filesystem (j0hanz) | 3 | move-file | bm25 #7 | Moves files; creates missing folders too |
-| `list_directory` | Filesystem (reference) | 2 | browse-folder | added by hand | Can find the files by browsing, with extra steps |
+| `list_directory` | Filesystem (reference) | 2 | browse-folder | added during judging | Can find the files by browsing, with extra steps |
 | `list` | Filesystem (j0hanz) | 2 | browse-folder | bm25 #2 | Can find the files by browsing, with extra steps |
 | `search_text` | Filesystem (j0hanz) | 1 |  | bm25 #10 | Searches inside files, not names |
 | `stat` | Filesystem (j0hanz) | 1 |  | bm25 #5 | Checks a path exists; cannot find or move |
@@ -108,7 +110,7 @@ BM25's top 10 contained 1 of the 2 relevant tools (grade 2 or 3) we found.
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
 | `issue_write` | GitHub (official) | 3 | update-issue | bm25 #7 | Updates labels and assignees in one call |
-| `get_me` | GitHub (official) | 2 | who-am-i | added by hand | Finds the user's login to assign |
+| `get_me` | GitHub (official) | 2 | who-am-i | added during judging | Finds the user's login to assign |
 | `assign_copilot_to_issue` | GitHub (official) | 1 |  | bm25 #1 | Assigns Copilot, not the user |
 | `issue_read` | GitHub (official) | 1 |  | bm25 #6 | Reads the issue; cannot change it |
 | `get_label` | GitHub (official) | 1 |  | bm25 #10 | Checks the label exists; cannot apply it |
@@ -127,10 +129,10 @@ BM25's top 10 contained 0 of the 4 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `get_file_info` | Filesystem (reference) | 3 | file-metadata | added by hand | Returns size and last-modified time |
-| `stat` | Filesystem (j0hanz) | 3 | file-metadata | added by hand | Returns size and timestamps |
-| `list_directory_with_sizes` | Filesystem (reference) | 2 | list-with-sizes | added by hand | Shows size, but not the date |
-| `list` | Filesystem (j0hanz) | 2 | list-with-sizes | added by hand | Shows size (with includeSizes), not the date |
+| `get_file_info` | Filesystem (reference) | 3 | file-metadata | added during judging | Returns size and last-modified time |
+| `stat` | Filesystem (j0hanz) | 3 | file-metadata | added during judging | Returns size and timestamps |
+| `list_directory_with_sizes` | Filesystem (reference) | 2 | list-with-sizes | added during judging | Shows size, but not the date |
+| `list` | Filesystem (j0hanz) | 2 | list-with-sizes | added during judging | Shows size (with includeSizes), not the date |
 | `git_blame` | Git (cyanheads) | 0 |  | bm25 #9 | Per-line Git history; not for a zip on disk |
 | `volume_inspect` | Docker (L337-org) | 0 |  | bm25 #1 | Docker volume details |
 | `pg_table_bloat` | Postgres (YawLabs) | 0 |  | bm25 #2 | Database table sizes |
@@ -150,12 +152,12 @@ BM25's top 10 contained 0 of the 6 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `git_status` | Git (reference) | 3 | working-tree-status | added by hand | Lists changed files |
-| `git_status` | Git (cyanheads) | 3 | working-tree-status | added by hand | Lists staged, unstaged and untracked files |
-| `git_diff` | Git (cyanheads) | 3 | uncommitted-diff | added by hand | Diffs the working tree, staged or not |
-| `git_diff` | Git (reference) | 2 | uncommitted-diff | added by hand | Works only if the agent passes HEAD as target |
-| `git_diff_unstaged` | Git (reference) | 2 | uncommitted-diff | added by hand | Shows unstaged changes only |
-| `git_diff_staged` | Git (reference) | 2 | uncommitted-diff | added by hand | Shows staged changes only |
+| `git_status` | Git (reference) | 3 | working-tree-status | added during judging | Lists changed files |
+| `git_status` | Git (cyanheads) | 3 | working-tree-status | added during judging | Lists staged, unstaged and untracked files |
+| `git_diff` | Git (cyanheads) | 3 | uncommitted-diff | added during judging | Diffs the working tree, staged or not |
+| `git_diff` | Git (reference) | 2 | uncommitted-diff | added during judging | Works only if the agent passes HEAD as target |
+| `git_diff_unstaged` | Git (reference) | 2 | uncommitted-diff | added during judging | Shows unstaged changes only |
+| `git_diff_staged` | Git (reference) | 2 | uncommitted-diff | added during judging | Shows staged changes only |
 | `get_commit` | GitHub (official) | 1 |  | bm25 #4 | Shows a pushed commit, not uncommitted work |
 | `git_log` | Git (cyanheads) | 1 |  | bm25 #6 | Past commits, not uncommitted work |
 | `git_show` | Git (cyanheads) | 1 |  | bm25 #7 | Shows the last commit, not changes since |
@@ -175,8 +177,8 @@ BM25's top 10 contained 4 of the 6 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `browser_navigate` | Playwright (Microsoft) | 3 | open-page | added by hand | Opens the URL |
-| `navigate_page` | Chrome DevTools (Google) | 3 | open-page | added by hand | Opens the URL |
+| `browser_navigate` | Playwright (Microsoft) | 3 | open-page | added during judging | Opens the URL |
+| `navigate_page` | Chrome DevTools (Google) | 3 | open-page | added during judging | Opens the URL |
 | `new_page` | Chrome DevTools (Google) | 3 | open-page | bm25 #6 | Opens the URL in a new tab |
 | `browser_console_messages` | Playwright (Microsoft) | 3 | console-messages | bm25 #1 | Returns console messages |
 | `list_console_messages` | Chrome DevTools (Google) | 3 | console-messages | bm25 #4 | Lists console messages |
@@ -197,9 +199,9 @@ BM25's top 10 contained 1 of the 4 relevant tools (grade 2 or 3) we found.
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
 | `get_file_contents` | GitHub (official) | 3 | read-repo-file | bm25 #9 | Reads README.md from the repository |
-| `fetch` | Fetch (reference) | 2 | fetch-web-page | added by hand | Works if the agent builds the GitHub URL |
-| `fetch_html_to_markdown` | Fetch (YawLabs) | 2 | fetch-web-page | added by hand | Works if the agent builds the GitHub URL |
-| `fetch_reader` | Fetch (YawLabs) | 2 | fetch-web-page | added by hand | Works if the agent builds the GitHub URL |
+| `fetch` | Fetch (reference) | 2 | fetch-web-page | added during judging | Works if the agent builds the GitHub URL |
+| `fetch_html_to_markdown` | Fetch (YawLabs) | 2 | fetch-web-page | added during judging | Works if the agent builds the GitHub URL |
+| `fetch_reader` | Fetch (YawLabs) | 2 | fetch-web-page | added during judging | Works if the agent builds the GitHub URL |
 | `search_repositories` | GitHub (official) | 1 |  | bm25 #1 | Finds the repository, not the README text |
 | `get_latest_release` | GitHub (official) | 0 |  | bm25 #8 | Release notes |
 | `list_pull_requests` | GitHub (official) | 0 |  | bm25 #2 | Pull requests |
@@ -218,11 +220,11 @@ BM25's top 10 contained 0 of the 2 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `container_run` | Docker (L337-org) | 3 | run-new-container | added by hand | Runs a new container with a port mapping |
-| `container_create` | Docker (L337-org) | 2 | create-container | added by hand | Works, but needs a separate start |
+| `container_run` | Docker (L337-org) | 3 | run-new-container | added during judging | Runs a new container with a port mapping |
+| `container_create` | Docker (L337-org) | 2 | create-container | added during judging | Works, but needs a separate start |
 | `service_create` | Docker (L337-org) | 1 |  | bm25 #10 | Needs a Docker Swarm cluster |
-| `image_pull` | Docker (L337-org) | 1 |  | added by hand | Downloads the image; does not start it |
-| `start_container` | Docker (ofershap) | 1 |  | added by hand | Starts an existing container; cannot create one |
+| `image_pull` | Docker (L337-org) | 1 |  | added during judging | Downloads the image; does not start it |
+| `start_container` | Docker (ofershap) | 1 |  | added during judging | Starts an existing container; cannot create one |
 | `compose_port` | Docker (L337-org) | 1 |  | bm25 #1 | Shows a published port; starts nothing |
 | `pg_query` | Postgres (YawLabs) | 0 |  | bm25 #2 | Needs a running database |
 | `pg_readonly` | Postgres (YawLabs) | 0 |  | bm25 #4 | Needs a running database |

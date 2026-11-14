@@ -9,9 +9,11 @@ Queries 1 to 12 from `docs/sample_queries.txt`, judged against the real tool col
 - **1**: related, but cannot do the request.
 - **0**: not relevant.
 
+Each tool gets the highest grade that fits.
+
 **Equivalent tools** that do the same job share a group name (for example `file-metadata`), even when they come from different vendors.
 
-**Which tools were judged:** for each query, the top 10 results of a plain keyword search (BM25 over tool name and description), plus tools added by hand that can do the job but the search missed.
+**Which tools were judged:** for each query, the top 10 results of a plain keyword search (BM25 over tool name and description), plus tools the judge added during judging because the search missed them.
 
 ## 1. List all tables in my local Postgres database
 
@@ -25,9 +27,9 @@ BM25's top 10 contained 4 of the 5 relevant tools (grade 2 or 3) we found.
 | `pg_list_tables` | Postgres (YawLabs) | 3 | list-tables | bm25 #8 | Lists tables in a schema |
 | `pg_query` | Postgres (YawLabs) | 2 | run-sql | bm25 #3 | Works, but needs a hand-written catalog query |
 | `pg_readonly` | Postgres (YawLabs) | 2 | run-sql | bm25 #4 | Same as pg_query, read-only |
-| `query` | Postgres (antonorlov) | 2 | run-sql | added by hand | Works, but needs a hand-written catalog query |
+| `query` | Postgres (antonorlov) | 2 | run-sql | added during judging | Works, but needs a hand-written catalog query |
 | `list_schemas` | Postgres (antonorlov) | 1 |  | bm25 #1 | Lists schemas, not tables |
-| `pg_list_schemas` | Postgres (YawLabs) | 1 |  | added by hand | Lists schemas, not tables |
+| `pg_list_schemas` | Postgres (YawLabs) | 1 |  | added during judging | Lists schemas, not tables |
 | `pg_list_roles` | Postgres (YawLabs) | 0 |  | bm25 #7 | Lists users and roles |
 | `pg_top_queries` | Postgres (YawLabs) | 0 |  | bm25 #6 | Query performance stats |
 | `pg_advisor` | Postgres (YawLabs) | 0 |  | bm25 #9 | Database health checks |
@@ -42,8 +44,8 @@ BM25's top 10 contained 2 of the 4 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `git_log` | Git (reference) | 3 | commit-history | added by hand | Commit log with start and end time filters |
-| `git_log` | Git (cyanheads) | 3 | commit-history | added by hand | Commit history with since/until filters |
+| `git_log` | Git (reference) | 3 | commit-history | added during judging | Commit log with start and end time filters |
+| `git_log` | Git (cyanheads) | 3 | commit-history | added during judging | Commit history with since/until filters |
 | `list_commits` | GitHub (official) | 3 | commit-history | bm25 #5 | Lists commits on GitHub with since/until |
 | `search_commits` | GitHub (official) | 2 | commit-history | bm25 #6 | Date search works, but default branch only |
 | `git_show` | Git (cyanheads) | 1 |  | bm25 #7 | Shows one commit; needs its ID first |
@@ -63,14 +65,14 @@ BM25's top 10 contained 0 of the 5 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `git_log` | Git (cyanheads) | 2 | commit-contents | added by hand | Can show every commit's changes; agent must spot the keys |
-| `git_show` | Git (cyanheads) | 2 | commit-contents | added by hand | Shows one commit's changes; must repeat for each commit |
-| `git_show` | Git (reference) | 2 | commit-contents | added by hand | Shows one commit's changes; must repeat for each commit |
-| `git_diff` | Git (cyanheads) | 2 | commit-contents | added by hand | Diffs one commit range at a time; agent must spot the keys |
-| `git_diff` | Git (reference) | 2 | commit-contents | added by hand | Diffs one commit range at a time; agent must spot the keys |
-| `git_log` | Git (reference) | 1 |  | added by hand | Lists commits without their content |
-| `search_code` | GitHub (official) | 1 |  | added by hand | Searches current code, not history |
-| `search_text` | Filesystem (j0hanz) | 1 |  | added by hand | Searches current files, not history |
+| `git_log` | Git (cyanheads) | 2 | commit-contents | added during judging | Can show every commit's changes; agent must spot the keys |
+| `git_show` | Git (cyanheads) | 2 | commit-contents | added during judging | Shows one commit's changes; must repeat for each commit |
+| `git_show` | Git (reference) | 2 | commit-contents | added during judging | Shows one commit's changes; must repeat for each commit |
+| `git_diff` | Git (cyanheads) | 2 | commit-contents | added during judging | Diffs one commit range at a time; agent must spot the keys |
+| `git_diff` | Git (reference) | 2 | commit-contents | added during judging | Diffs one commit range at a time; agent must spot the keys |
+| `git_log` | Git (reference) | 1 |  | added during judging | Lists commits without their content |
+| `search_code` | GitHub (official) | 1 |  | added during judging | Searches current code, not history |
+| `search_text` | Filesystem (j0hanz) | 1 |  | added during judging | Searches current files, not history |
 | `image_inspect` | Docker (L337-org) | 0 |  | bm25 #1 | Docker image details |
 | `buildx_history_list` | Docker (L337-org) | 0 |  | bm25 #2 | Docker build history |
 | `pg_seq_scan_tables` | Postgres (YawLabs) | 0 |  | bm25 #3 | Database scan stats |
@@ -90,13 +92,13 @@ BM25's top 10 contained 0 of the 5 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `fetch` | Fetch (reference) | 2 | fetch-web-page | added by hand | Loads the guide if the agent knows its URL |
-| `fetch_reader` | Fetch (YawLabs) | 2 | fetch-web-page | added by hand | Loads the guide if the agent knows its URL |
-| `fetch_html_to_markdown` | Fetch (YawLabs) | 2 | fetch-web-page | added by hand | Loads the guide if the agent knows its URL |
-| `browser_navigate` | Playwright (Microsoft) | 2 | open-page | added by hand | Can open the guide or a search engine, then read it |
-| `navigate_page` | Chrome DevTools (Google) | 2 | open-page | added by hand | Can open the guide or a search engine, then read it |
+| `fetch` | Fetch (reference) | 2 | fetch-web-page | added during judging | Loads the guide if the agent knows its URL |
+| `fetch_reader` | Fetch (YawLabs) | 2 | fetch-web-page | added during judging | Loads the guide if the agent knows its URL |
+| `fetch_html_to_markdown` | Fetch (YawLabs) | 2 | fetch-web-page | added during judging | Loads the guide if the agent knows its URL |
+| `browser_navigate` | Playwright (Microsoft) | 2 | open-page | added during judging | Can open the guide or a search engine, then read it |
+| `navigate_page` | Chrome DevTools (Google) | 2 | open-page | added during judging | Can open the guide or a search engine, then read it |
 | `docs_lookup` | Docker (L337-org) | 1 |  | bm25 #1 | Looks up Docker docs, not Terraform |
-| `search_repositories` | GitHub (official) | 1 |  | added by hand | Finds Terraform's GitHub repo, not the guide |
+| `search_repositories` | GitHub (official) | 1 |  | added during judging | Finds Terraform's GitHub repo, not the guide |
 | `http_head` | Fetch (YawLabs) | 0 |  | bm25 #2 | Checks a URL exists; returns no content |
 | `compose_up` | Docker (L337-org) | 0 |  | bm25 #3 | Starts Docker Compose services |
 | `assign_copilot_to_issue` | GitHub (official) | 0 |  | bm25 #4 | Assigns Copilot to an issue |
@@ -116,15 +118,15 @@ BM25's top 10 contained 5 of the 10 relevant tools (grade 2 or 3) we found.
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
 | `fetch` | Fetch (reference) | 3 | fetch-web-page | bm25 #3 | Returns the page as markdown |
-| `fetch_html_to_markdown` | Fetch (YawLabs) | 3 | fetch-web-page | added by hand | Returns the page as markdown |
+| `fetch_html_to_markdown` | Fetch (YawLabs) | 3 | fetch-web-page | added during judging | Returns the page as markdown |
 | `fetch_html_to_text` | Fetch (YawLabs) | 3 | fetch-web-page | bm25 #6 | Returns the page as plain text |
 | `fetch_reader` | Fetch (YawLabs) | 3 | fetch-web-page | bm25 #10 | Returns the page's main content |
-| `http_get` | Fetch (YawLabs) | 2 | fetch-web-page | added by hand | Returns raw HTML; agent must pick out the prices |
+| `http_get` | Fetch (YawLabs) | 2 | fetch-web-page | added during judging | Returns raw HTML; agent must pick out the prices |
 | `navigate_page` | Chrome DevTools (Google) | 2 | open-page | bm25 #1 | Opens the page; reading it is a second step |
 | `new_page` | Chrome DevTools (Google) | 2 | open-page | bm25 #2 | Opens the page; reading it is a second step |
-| `browser_navigate` | Playwright (Microsoft) | 2 | open-page | added by hand | Opens the page; reading it is a second step |
-| `browser_snapshot` | Playwright (Microsoft) | 2 | page-snapshot | added by hand | Reads the open page's text |
-| `take_snapshot` | Chrome DevTools (Google) | 2 | page-snapshot | added by hand | Reads the open page's text |
+| `browser_navigate` | Playwright (Microsoft) | 2 | open-page | added during judging | Opens the page; reading it is a second step |
+| `browser_snapshot` | Playwright (Microsoft) | 2 | page-snapshot | added during judging | Reads the open page's text |
+| `take_snapshot` | Chrome DevTools (Google) | 2 | page-snapshot | added during judging | Reads the open page's text |
 | `fetch_meta` | Fetch (YawLabs) | 1 |  | bm25 #9 | Gets the title and description, not prices |
 | `fetch_robots` | Fetch (YawLabs) | 0 |  | bm25 #5 | Reads robots.txt |
 | `fetch_sitemap` | Fetch (YawLabs) | 0 |  | bm25 #7 | Reads a sitemap |
@@ -142,9 +144,9 @@ BM25's top 10 contained 4 of the 7 relevant tools (grade 2 or 3) we found.
 | `container_run` | Docker (L337-org) | 3 | run-new-container | bm25 #7 | Runs a new container and can wait for the result |
 | `compose_run` | Docker (L337-org) | 2 | run-new-container | bm25 #8 | Works only with a Compose file; output fetched separately |
 | `container_exec` | Docker (L337-org) | 2 | run-in-running-container | bm25 #4 | Runs a command, but needs a running container |
-| `exec_command` | Docker (ofershap) | 2 | run-in-running-container | added by hand | Runs a command, but needs a running container |
-| `container_logs` | Docker (L337-org) | 2 | container-output | added by hand | Shows the test output after a detached run |
-| `container_logs` | Docker (ofershap) | 2 | container-output | added by hand | Shows the test output after a detached run |
+| `exec_command` | Docker (ofershap) | 2 | run-in-running-container | added during judging | Runs a command, but needs a running container |
+| `container_logs` | Docker (L337-org) | 2 | container-output | added during judging | Shows the test output after a detached run |
+| `container_logs` | Docker (ofershap) | 2 | container-output | added during judging | Shows the test output after a detached run |
 | `compose_logs` | Docker (L337-org) | 2 | container-output | bm25 #9 | Shows output of a Compose run |
 | `container_start` | Docker (L337-org) | 1 |  | bm25 #10 | Starts an existing container; cannot create one |
 | `container_list` | Docker (L337-org) | 0 |  | bm25 #1 | Lists containers |
@@ -161,13 +163,13 @@ BM25's top 10 contained 5 of the 8 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `search_files` | Filesystem (reference) | 3 | find-by-name | added by hand | Finds files by name pattern |
+| `search_files` | Filesystem (reference) | 3 | find-by-name | added during judging | Finds files by name pattern |
 | `find_files` | Filesystem (j0hanz) | 3 | find-by-name | bm25 #6 | Finds files by name pattern |
-| `create_directory` | Filesystem (reference) | 3 | make-folder | added by hand | Creates the new folder |
+| `create_directory` | Filesystem (reference) | 3 | make-folder | added during judging | Creates the new folder |
 | `create` | Filesystem (j0hanz) | 3 | make-folder | bm25 #8 | Creates folders (and files) |
 | `move_file` | Filesystem (reference) | 3 | move-file | bm25 #1 | Moves a file |
 | `move` | Filesystem (j0hanz) | 3 | move-file | bm25 #7 | Moves files; creates missing folders too |
-| `list_directory` | Filesystem (reference) | 2 | browse-folder | added by hand | Can find the files by browsing, with extra steps |
+| `list_directory` | Filesystem (reference) | 2 | browse-folder | added during judging | Can find the files by browsing, with extra steps |
 | `list` | Filesystem (j0hanz) | 2 | browse-folder | bm25 #2 | Can find the files by browsing, with extra steps |
 | `search_text` | Filesystem (j0hanz) | 1 |  | bm25 #10 | Searches inside files, not names |
 | `stat` | Filesystem (j0hanz) | 1 |  | bm25 #5 | Checks a path exists; cannot find or move |
@@ -186,15 +188,15 @@ BM25's top 10 contained 6 of the 12 relevant tools (grade 2 or 3) we found.
 | `git_create_branch` | Git (reference) | 3 | create-branch | bm25 #2 | Creates the new branch |
 | `git_checkout` | Git (cyanheads) | 3 | create-branch | bm25 #9 | Creates and switches to the new branch |
 | `git_branch` | Git (cyanheads) | 3 | create-branch | bm25 #8 | Creates the new branch |
-| `git_checkout` | Git (reference) | 3 | switch-branch | added by hand | Switches to the new branch |
-| `git_add` | Git (reference) | 3 | stage-changes | added by hand | Stages the changes |
-| `git_add` | Git (cyanheads) | 3 | stage-changes | added by hand | Stages the changes |
-| `git_commit` | Git (reference) | 3 | commit | added by hand | Commits the staged changes |
+| `git_checkout` | Git (reference) | 3 | switch-branch | added during judging | Switches to the new branch |
+| `git_add` | Git (reference) | 3 | stage-changes | added during judging | Stages the changes |
+| `git_add` | Git (cyanheads) | 3 | stage-changes | added during judging | Stages the changes |
+| `git_commit` | Git (reference) | 3 | commit | added during judging | Commits the staged changes |
 | `git_commit` | Git (cyanheads) | 3 | commit | bm25 #10 | Commits, and can stage files too |
-| `git_push` | Git (cyanheads) | 3 | push-branch | added by hand | Pushes the branch to GitHub |
+| `git_push` | Git (cyanheads) | 3 | push-branch | added during judging | Pushes the branch to GitHub |
 | `create_pull_request` | GitHub (official) | 3 | open-pr | bm25 #3 | Opens the pull request |
 | `create_branch` | GitHub (official) | 2 | create-branch | bm25 #7 | Creates the branch on GitHub only, not locally |
-| `push_files` | GitHub (official) | 2 | push-branch | added by hand | Commits files on GitHub directly; agent must send their content |
+| `push_files` | GitHub (official) | 2 | push-branch | added during judging | Commits files on GitHub directly; agent must send their content |
 | `update_pull_request_branch` | GitHub (official) | 1 |  | bm25 #1 | Updates an existing pull request |
 | `git_pull` | Git (cyanheads) | 0 |  | bm25 #5 | Pulls in others' changes |
 | `add_reply_to_pull_request_comment` | GitHub (official) | 0 |  | bm25 #4 | Replies to a comment |
@@ -210,8 +212,8 @@ BM25's top 10 contained 2 of the 3 relevant tools (grade 2 or 3) we found.
 |---|---|---|---|---|---|
 | `search_issues` | GitHub (official) | 3 | find-issues | bm25 #3 | Accepts GitHub search filters like mentions: (per the server's code) |
 | `list_issues` | GitHub (official) | 2 | find-issues | bm25 #1 | Lists open issues; agent must filter by mention |
-| `get_me` | GitHub (official) | 2 | who-am-i | added by hand | Finds the user's login to filter on |
-| `issue_read` | GitHub (official) | 1 |  | added by hand | Reads one issue at a time |
+| `get_me` | GitHub (official) | 2 | who-am-i | added during judging | Finds the user's login to filter on |
+| `issue_read` | GitHub (official) | 1 |  | added during judging | Reads one issue at a time |
 | `search_pull_requests` | GitHub (official) | 1 |  | bm25 #6 | Searches pull requests, not issues |
 | `new_page` | Chrome DevTools (Google) | 1 |  | bm25 #7 | Could open GitHub's issue search; needs a login |
 | `list_issue_types` | GitHub (official) | 0 |  | bm25 #5 | Issue types |
@@ -229,8 +231,8 @@ BM25's top 10 contained 3 of the 5 relevant tools (grade 2 or 3) we found.
 
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
-| `browser_navigate` | Playwright (Microsoft) | 3 | open-page | added by hand | Opens the issues page |
-| `navigate_page` | Chrome DevTools (Google) | 3 | open-page | added by hand | Opens the issues page |
+| `browser_navigate` | Playwright (Microsoft) | 3 | open-page | added during judging | Opens the issues page |
+| `navigate_page` | Chrome DevTools (Google) | 3 | open-page | added during judging | Opens the issues page |
 | `new_page` | Chrome DevTools (Google) | 3 | open-page | bm25 #8 | Opens the issues page in a new tab |
 | `browser_take_screenshot` | Playwright (Microsoft) | 3 | screenshot | bm25 #1 | Takes the screenshot |
 | `take_screenshot` | Chrome DevTools (Google) | 3 | screenshot | bm25 #2 | Takes the screenshot |
@@ -252,17 +254,17 @@ BM25's top 10 contained 4 of the 13 relevant tools (grade 2 or 3) we found.
 |---|---|---|---|---|---|
 | `fill_form` | Chrome DevTools (Google) | 3 | fill-form | bm25 #1 | Fills many fields at once |
 | `browser_fill_form` | Playwright (Microsoft) | 3 | fill-form | bm25 #2 | Fills many fields at once |
-| `browser_click` | Playwright (Microsoft) | 3 | click | added by hand | Clicks the submit button |
-| `click` | Chrome DevTools (Google) | 3 | click | added by hand | Clicks the submit button |
+| `browser_click` | Playwright (Microsoft) | 3 | click | added during judging | Clicks the submit button |
+| `click` | Chrome DevTools (Google) | 3 | click | added during judging | Clicks the submit button |
 | `fill` | Chrome DevTools (Google) | 2 | fill-field | bm25 #6 | Fills one field per call |
-| `browser_type` | Playwright (Microsoft) | 2 | fill-field | added by hand | Types into one field per call |
-| `type_text` | Chrome DevTools (Google) | 2 | fill-field | added by hand | Types into the focused field |
-| `browser_press_key` | Playwright (Microsoft) | 2 | press-key | added by hand | Can submit by pressing Enter |
+| `browser_type` | Playwright (Microsoft) | 2 | fill-field | added during judging | Types into one field per call |
+| `type_text` | Chrome DevTools (Google) | 2 | fill-field | added during judging | Types into the focused field |
+| `browser_press_key` | Playwright (Microsoft) | 2 | press-key | added during judging | Can submit by pressing Enter |
 | `press_key` | Chrome DevTools (Google) | 2 | press-key | bm25 #7 | Can submit by pressing Enter |
-| `browser_snapshot` | Playwright (Microsoft) | 2 | page-snapshot | added by hand | Finds the form fields first |
-| `take_snapshot` | Chrome DevTools (Google) | 2 | page-snapshot | added by hand | Finds the form fields first |
-| `browser_navigate` | Playwright (Microsoft) | 2 | open-page | added by hand | Needed only if the page is not open yet |
-| `navigate_page` | Chrome DevTools (Google) | 2 | open-page | added by hand | Needed only if the page is not open yet |
+| `browser_snapshot` | Playwright (Microsoft) | 2 | page-snapshot | added during judging | Finds the form fields first |
+| `take_snapshot` | Chrome DevTools (Google) | 2 | page-snapshot | added during judging | Finds the form fields first |
+| `browser_navigate` | Playwright (Microsoft) | 2 | open-page | added during judging | Needed only if the page is not open yet |
+| `navigate_page` | Chrome DevTools (Google) | 2 | open-page | added during judging | Needed only if the page is not open yet |
 | `browser_drop` | Playwright (Microsoft) | 0 |  | bm25 #4 | Drops files onto the page |
 | `container_exec` | Docker (L337-org) | 0 |  | bm25 #3 | Runs a command in a container |
 | `pull_request_review_write` | GitHub (official) | 0 |  | bm25 #5 | Submits a code review |
@@ -279,7 +281,7 @@ BM25's top 10 contained 1 of the 2 relevant tools (grade 2 or 3) we found.
 | Tool | Server | Grade | Group | Source | Why |
 |---|---|---|---|---|---|
 | `issue_write` | GitHub (official) | 3 | update-issue | bm25 #7 | Updates labels and assignees in one call |
-| `get_me` | GitHub (official) | 2 | who-am-i | added by hand | Finds the user's login to assign |
+| `get_me` | GitHub (official) | 2 | who-am-i | added during judging | Finds the user's login to assign |
 | `assign_copilot_to_issue` | GitHub (official) | 1 |  | bm25 #1 | Assigns Copilot, not the user |
 | `issue_read` | GitHub (official) | 1 |  | bm25 #6 | Reads the issue; cannot change it |
 | `get_label` | GitHub (official) | 1 |  | bm25 #10 | Checks the label exists; cannot apply it |
