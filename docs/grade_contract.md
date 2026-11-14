@@ -1,6 +1,6 @@
 # Sample Data and Grade Contract
 
-**Our task.** AI agents can connect to many MCP (Model Context Protocol) servers at once, and each server offers tools such as "read a file" or "open a pull request". Different vendors offer near-identical tools with different names and descriptions, and putting every tool into the agent's prompt is costly and makes the right tool harder to pick. Our task: given a developer's request in plain English, rank tools pooled from many real MCP servers, where equivalent tools from different vendors are equally relevant.
+**Our task.** AI agents can connect to many MCP (Model Context Protocol) servers at once, and each server offers tools such as "read a file" or "open a pull request". Different vendors offer near-identical tools with different names and descriptions, and putting every tool into the agent's prompt is costly and makes the right tool harder to pick. Given a developer's request in plain English, we rank tools pooled from many real MCP servers, where equivalent tools from different vendors are equally relevant.
 
 ## 1. Sample queries and relevance judgments
 
@@ -8,7 +8,7 @@
 
 - **Tools.** 384 tools from 13 MCP servers in 7 categories: filesystem, Git, GitHub, Postgres, containers, browser, and web fetch. We collected them on November 13, 2026 (US Eastern time) by asking each running server for its tool list. Each server ran in a throwaway container, and every server version is pinned.
 - **Queries.** We wrote 12 sample queries before reading any tool descriptions. Ten are shown below.
-- **Which tools were judged.** For each query: the top 10 tools from BM25, a standard keyword-matching ranker, run over tool names and descriptions, plus tools the judge added after scanning the names of all 384 tools for ones the search missed.
+- **Which tools were judged.** For each query, the top 10 tools from BM25, a standard keyword-matching ranker, run over tool names and descriptions, plus tools the judge added after scanning the names of all 384 tools for ones the search missed.
 - **Judge.** An LLM (Claude Opus 5.5) drafted the grades using the scale below. A human check is part of milestone B.
 - **Early observation.** For these 10 queries, BM25's top 10 contained 36 of the 69 relevant tools (grade 2 or 3) that we know of.
 - **Full data**, including every tool judged not relevant: https://github.com/RohanRajendra/mcp-tool-retrieval/blob/dev/data/sample_judgments_q1-12.jsonl
@@ -120,7 +120,7 @@ Each milestone is work we will do, not a score we promise to reach. Each grade i
 ### B
 
 1. **Collection.** Add one docs or web-search server (for example, Context7) and GitHub's secret-scanning tools to the current 384 tools, then freeze the collection before judging starts. Every server version is pinned and its collection date recorded.
-2. **Queries.** 40 queries: the 12 sample queries plus 28 new ones written from real developer tasks, without copying wording from tool descriptions. Each has a narrative that says what the user wants and what makes a tool relevant or not.
+2. **Queries.** The 12 sample queries plus 28 new ones, 40 in total. The new ones are written from real developer tasks, without copying wording from tool descriptions. Each query has a narrative that says what the user wants and what makes a tool relevant or not.
 3. **Candidates.** For each query, the top 10 tools from BM25 and the top 10 from one off-the-shelf dense retriever (a model that matches by meaning rather than exact words, named in the report), plus tools the judge adds after scanning the full tool list. Both retrievers index each tool's name, description, and parameter schema (the names and descriptions of its inputs).
 4. **Judgments.** An LLM grades every candidate on the 0 to 3 scale. The report names the model and includes the prompt.
 5. **Human check.** We hand-grade 50 query-tool pairs without seeing the LLM's grades, about 12 drawn at random from each of the LLM's four grades. We report weighted Cohen's kappa, a standard measure of how much two judges agree beyond chance (with linear weights, a 3-vs-2 disagreement counts less than a 3-vs-0).
