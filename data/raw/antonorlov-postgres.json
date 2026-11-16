@@ -1,0 +1,178 @@
+{
+  "config": {
+    "id": "antonorlov-postgres",
+    "server_id": "io.github.antonorlov/mcp-postgres-server",
+    "category": "postgres",
+    "registry_name": "io.github.antonorlov/mcp-postgres-server",
+    "package_type": "npm",
+    "package": "mcp-postgres-server",
+    "version": "0.3.1",
+    "image": "node:24-bookworm",
+    "setup": null,
+    "command": [
+      "npx",
+      "-y",
+      "mcp-postgres-server@0.3.1"
+    ],
+    "env": {
+      "DATABASE_URL": "postgresql://postgres:collect@mcp-collect-pg:5432/postgres"
+    }
+  },
+  "image_digest": "node@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496",
+  "status": "ok",
+  "retrieved_at": "2026-11-14T01:53:40Z",
+  "server_name": "postgres-server",
+  "server_version": "0.3.1",
+  "protocol_version": "2025-11-25",
+  "seconds": 15.6,
+  "tools": [
+    {
+      "name": "query",
+      "title": "Run read-only SQL",
+      "description": "Run one read-only SQL statement against the connected PostgreSQL database and get rows back as JSON. Send exactly one statement per call (SELECT, WITH, EXPLAIN, or SHOW). It runs inside an engine-enforced read-only transaction, so any write is refused by the database. Use this tool for all data reading, aggregation, and query planning. Returns {rows, rowCount, returnedRows, truncated}, plus hint when truncated is true. Prefer $1, $2 placeholders with the params array over interpolating values. Results are capped at ~32768 bytes; truncated:true means rows were dropped - add LIMIT/WHERE or select fewer columns.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "One SQL statement. Use $1, $2, ... for parameters."
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "description": "Positional parameter values bound to $1, $2, ... placeholders."
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "execute",
+      "title": "Run a write statement (disabled)",
+      "description": "Run a data-modifying SQL statement (INSERT/UPDATE/DELETE or DDL). Currently DISABLED: the server is read-only, so this returns an error and changes nothing. To enable writes, the operator must start the server with PG_ALLOW_WRITE=true.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": {
+            "type": "string",
+            "description": "One INSERT / UPDATE / DELETE / DDL statement. Use $1, $2, ... for parameters."
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "description": "Positional parameter values bound to $1, $2, ... placeholders."
+          }
+        },
+        "required": [
+          "sql"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_schemas",
+      "title": "List schemas",
+      "description": "List every schema in the connected database. Start here when exploring an unfamiliar database, then call list_tables for the schema you care about. Returns {schemas: [name, ...]}.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {}
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_tables",
+      "title": "List tables",
+      "description": "List all tables in a schema (default: 'public'). Use this before querying tables you have not seen yet, then call describe_table for column details. Returns {tables: [name, ...]}.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "description": "Schema name (default: 'public')"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "describe_table",
+      "title": "Describe a table",
+      "description": "Show the structure of one table: column names, data types, nullability, defaults, and primary-key membership. Call this before writing non-trivial queries against a table. Returns {columns: [{column, type, nullable, default, is_primary_key}, ...]}.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Table name"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema name (default: 'public')"
+          }
+        },
+        "required": [
+          "table"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

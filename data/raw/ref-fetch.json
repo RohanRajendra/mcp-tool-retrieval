@@ -1,0 +1,84 @@
+{
+  "config": {
+    "id": "ref-fetch",
+    "server_id": "modelcontextprotocol/servers/fetch",
+    "category": "fetch",
+    "registry_name": null,
+    "package_type": "pypi",
+    "package": "mcp-server-fetch",
+    "version": "2026.11.11",
+    "image": "ghcr.io/astral-sh/uv:python3.12-bookworm",
+    "setup": null,
+    "command": [
+      "uvx",
+      "--from",
+      "mcp-server-fetch==2026.11.11",
+      "mcp-server-fetch"
+    ],
+    "env": {}
+  },
+  "image_digest": "ghcr.io/astral-sh/uv@sha256:85d4cb1afa769a7338e095b927bee941cf5ec92266c7424b3f6c0f2748567248",
+  "status": "ok",
+  "retrieved_at": "2026-11-14T01:53:54Z",
+  "server_name": "mcp-fetch",
+  "server_version": "2026.11.11",
+  "protocol_version": "2025-11-25",
+  "seconds": 6.7,
+  "tools": [
+    {
+      "name": "fetch",
+      "description": "Fetches a URL from the internet and optionally extracts its contents as markdown.\n\nAlthough originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "URL to fetch",
+            "format": "uri",
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          },
+          "max_length": {
+            "default": 5000,
+            "description": "Maximum number of characters to return.",
+            "maximum": 999999,
+            "minimum": 1,
+            "title": "Max Length",
+            "type": "integer"
+          },
+          "start_index": {
+            "default": 0,
+            "description": "On return output starting at this character index, useful if a previous fetch was truncated and more context is required.",
+            "minimum": 0,
+            "title": "Start Index",
+            "type": "integer"
+          },
+          "raw": {
+            "default": false,
+            "description": "Get the actual HTML content of the requested page, without simplification.",
+            "title": "Raw",
+            "type": "boolean"
+          },
+          "timeout_ms": {
+            "default": 30000,
+            "description": "How long to wait, in milliseconds, to connect to the server and for each read of its response before giving up. Raise it for a slow server or a large download; lower it to fail fast.",
+            "maximum": 600000,
+            "minimum": 100,
+            "title": "Timeout Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object",
+        "title": "fetchArguments"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    }
+  ]
+}

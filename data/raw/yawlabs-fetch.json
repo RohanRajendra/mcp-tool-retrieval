@@ -1,0 +1,1162 @@
+{
+  "config": {
+    "id": "yawlabs-fetch",
+    "server_id": "io.github.YawLabs/fetch-mcp",
+    "category": "fetch",
+    "registry_name": "io.github.YawLabs/fetch-mcp",
+    "package_type": "npm",
+    "package": "@yawlabs/fetch-mcp",
+    "version": "0.8.7",
+    "image": "node:24-bookworm",
+    "setup": null,
+    "command": [
+      "npx",
+      "-y",
+      "@yawlabs/fetch-mcp@0.8.7"
+    ],
+    "env": {}
+  },
+  "image_digest": "node@sha256:9d266751ca3d7fdbe651c878ffd5ad0a42fed49a18c283509267c97f025b7496",
+  "status": "ok",
+  "retrieved_at": "2026-11-14T01:54:02Z",
+  "server_name": "fetch-mcp",
+  "server_version": "0.8.7",
+  "protocol_version": "2025-11-25",
+  "seconds": 8.0,
+  "tools": [
+    {
+      "name": "http_get",
+      "description": "Perform an HTTP GET. Returns status, headers, and body. Automatically parses JSON when the server responds with application/json. Follows redirects (each hop re-validated against SSRF rules). Refuses URLs that resolve to private/loopback/link-local addresses unless the operator enabled FETCH_MCP_ALLOW_PRIVATE_HOSTS and the call sets allow_private_hosts.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "http_post",
+      "description": "Perform an HTTP POST. Body can be given as a raw string (body) or as a JSON value (body_json — auto-sets content-type to application/json). NOT idempotent: calling twice submits twice.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          },
+          "body": {
+            "description": "Raw request body as a string",
+            "type": "string"
+          },
+          "body_json": {
+            "description": "Request body as a JSON value — sets content-type to application/json if none given"
+          },
+          "content_type": {
+            "description": "Content-Type header to send with the body (e.g. application/json, text/plain, application/x-www-form-urlencoded)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "http_put",
+      "description": "Perform an HTTP PUT. Use for full-resource replacement. Idempotent: the same PUT applied twice leaves the resource in the same state.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          },
+          "body": {
+            "description": "Raw request body as a string",
+            "type": "string"
+          },
+          "body_json": {
+            "description": "Request body as a JSON value — sets content-type to application/json if none given"
+          },
+          "content_type": {
+            "description": "Content-Type header to send with the body (e.g. application/json, text/plain, application/x-www-form-urlencoded)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "http_patch",
+      "description": "Perform an HTTP PATCH. Use for partial updates. Spec-wise NOT guaranteed idempotent — depends on the server's patch semantics.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          },
+          "body": {
+            "description": "Raw request body as a string",
+            "type": "string"
+          },
+          "body_json": {
+            "description": "Request body as a JSON value — sets content-type to application/json if none given"
+          },
+          "content_type": {
+            "description": "Content-Type header to send with the body (e.g. application/json, text/plain, application/x-www-form-urlencoded)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "http_delete",
+      "description": "Perform an HTTP DELETE. Idempotent (per spec): a repeated DELETE on an already-deleted resource typically returns 404/410.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          },
+          "body": {
+            "description": "Raw request body as a string",
+            "type": "string"
+          },
+          "body_json": {
+            "description": "Request body as a JSON value — sets content-type to application/json if none given"
+          },
+          "content_type": {
+            "description": "Content-Type header to send with the body (e.g. application/json, text/plain, application/x-www-form-urlencoded)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "http_head",
+      "description": "Perform an HTTP HEAD. Returns status + headers with no body. Useful for checking a resource exists, getting its size (Content-Length), or polling for changes cheaply.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "http_options",
+      "description": "Perform an HTTP OPTIONS. Returns the server's supported methods and CORS policy for a resource. Helpful for API discovery.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL (http:// or https://)"
+          },
+          "headers": {
+            "description": "Extra request headers as a key/value object",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for each attempt, covering DNS, every redirect hop and the body (default 10000, max 120000). Retries get a fresh budget; a whole call is capped at 5 minutes.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response body size in bytes before the body is truncated (default 5MiB, ceiling 100MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops to follow (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "basic_auth": {
+            "description": "HTTP Basic auth credentials",
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "bearer_token": {
+            "description": "Bearer token sent as Authorization: Bearer <token>",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "User-Agent override (default identifies as @yawlabs/fetch-mcp)",
+            "type": "string"
+          },
+          "retries": {
+            "description": "Retries on 408/425/429/500/502/503/504 with exponential backoff (default 0)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "decode_text": {
+            "description": "Force text decoding (true) or binary base64 (false). Defaults to auto — text for text/*, json, xml, etc; binary otherwise.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_html_to_markdown",
+      "description": "GET a URL, decode the HTML, and convert to clean markdown (headings, lists, links, code fences). Scripts, styles, iframes, nav, footer, and aside elements are stripped. Intended for feeding web pages into an LLM cheaply -- markdown is usually 3-8x smaller than raw HTML. Follows redirects, respects size/timeout limits, and blocks private-host requests by default.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to fetch"
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for the request, covering DNS, every redirect hop and the body (default 10000); the HTML-to-markdown step gets its own budget of the same length",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response size in bytes (default 5MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "description": "User-Agent override",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_html_to_text",
+      "description": "GET a URL, decode the HTML, and return plain text with block-level structure preserved as newlines. Scripts, styles, and comments stripped; HTML entities decoded. Lighter than markdown when you only need the reading content.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to fetch"
+          },
+          "timeout_ms": {
+            "description": "Timeout in ms for the request, covering DNS, every redirect hop and the body (default 10000)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "description": "Max response size in bytes (default 5MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "description": "Max redirect hops (default 5)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "description": "User-Agent override",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_robots",
+      "description": "Fetch and parse the robots.txt for a given origin, then tell the caller whether a target URL is crawlable by a given user-agent. Follows the Google-style longest-match rule with Allow-wins-on-tie. Returns the raw robots.txt, parsed groups, sitemap references, and the allow/deny verdict with the matching rule.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Target URL to check. We derive origin + path automatically."
+          },
+          "user_agent": {
+            "description": "User-agent string to match against groups (default '*')",
+            "type": "string"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 60000
+          },
+          "max_redirects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_sitemap",
+      "description": "Fetch a sitemap.xml (or sitemap-index) and return the contained URLs with their lastmod / changefreq / priority. Follows sitemap-index chaining up to max_depth levels. Gzipped .xml.gz payloads are auto-decompressed. A single sitemap document over 16 MiB once decoded is refused (a 50,000-URL sitemap is ~11 MiB). Partial failures (one child sitemap 500s while others work) are returned under 'warnings' without aborting the whole request. SSRF-protected by default.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Sitemap URL (sitemap.xml, sitemap.xml.gz, or a sitemap index)"
+          },
+          "max_depth": {
+            "description": "How many sitemap-index levels to follow (default 1). 0 keeps the top-level index flat and only returns its childSitemaps list.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "max_urls": {
+            "description": "Cap on total URLs returned (default 5000)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50000
+          },
+          "max_sitemaps": {
+            "description": "Cap on sitemap documents fetched -- the index plus every child (default 50, max 1000). Children past the cap are listed under childSitemaps, unfetched.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "max_bytes": {
+            "description": "Max bytes to read per sitemap response (default 20MiB)",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 60000
+          },
+          "max_redirects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_meta",
+      "description": "GET a URL and extract its head metadata: title, description, canonical, language, robots directive, Open Graph / Twitter Card / article: properties, icon links, RSS/Atom feed links, and any JSON-LD (schema.org) blocks. Keys that appear more than once (e.g. multiple og:image tags) are additionally returned via ogAll/twitterAll/articleAll arrays. Lists are capped: at most 100 icons, feeds, JSON-LD blocks and values per *All key, and 1000 keys per og/twitter/article; a JSON-LD block nested deeper than 64 levels is dropped. When anything is cut, `truncated` names the collections affected. Ideal for previewing a page before fully reading it.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to extract metadata from"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 60000
+          },
+          "max_bytes": {
+            "description": "Default 2MiB — metadata lives in <head>",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_links",
+      "description": "Extract every outbound link from an HTML page, resolved to absolute URLs. Each entry includes href, anchor text, optional rel/title, and an internal/external classification (bare-domain and www. treated as the same host). Only http and https links are returned: anchors (#) and every other scheme (javascript:, mailto:, tel:, data:, file:, ...) are skipped. Respects <base href>.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 60000
+          },
+          "max_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "type": "string"
+          },
+          "dedupe": {
+            "description": "Drop duplicate hrefs (default true)",
+            "type": "boolean"
+          },
+          "filter": {
+            "description": "Filter by type (default 'all')",
+            "type": "string",
+            "enum": [
+              "all",
+              "internal",
+              "external"
+            ]
+          },
+          "limit": {
+            "description": "Cap on returned links (default 1000)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_feed",
+      "description": "Fetch and parse an RSS 2.0 or Atom 1.0 feed. Returns feed-level metadata (title, description, link, updated) plus a list of entries (title, link, id, published, updated, author, summary, content, contentType, categories). Auto-detects RSS vs Atom.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "limit": {
+            "description": "Max entries to return (default 50)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 60000
+          },
+          "max_bytes": {
+            "description": "Max bytes to read (default 10MiB). A feed over 16 MiB is refused whatever max_bytes says.",
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "fetch_reader",
+      "description": "GET a URL, locate the main article body (prefers <article>, <main>, itemprop=articleBody, or known CMS class names; falls back to <body>), strip navigation/footer/aside chrome, and convert to clean markdown. Returns { title, byline, markdown, wordCount }. Optimized for feeding long-form articles into an LLM without header/footer/sidebar noise.",
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 120000
+          },
+          "max_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "max_redirects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "allow_private_hosts": {
+            "description": "Allow loopback / private / link-local targets for this call (default false). Refused unless the server operator launched fetch-mcp with FETCH_MCP_ALLOW_PRIVATE_HOSTS=1 -- SSRF protection stays on by default either way.",
+            "type": "boolean"
+          },
+          "user_agent": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    }
+  ]
+}

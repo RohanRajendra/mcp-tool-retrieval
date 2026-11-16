@@ -1,0 +1,129 @@
+PROJECT: SAMPLE DATA AND GRADE CONTRACT
+
+TASK IN BRIEF
+AI agents connect to many tool servers (MCP servers) at once. Different vendors ship near-identical tools with different names and descriptions, for example two filesystem servers that both move files. An agent cannot load every tool, so it must first retrieve a short list of the right ones for a request. Our task: given a plain-English developer request, rank tools pooled from many real MCP servers. Several tools can be correct, because equivalent tools from different vendors are equally relevant.
+
+PART 1. SAMPLE DATA
+
+How it was built
+- Collection: 384 tools from 13 real MCP servers (filesystem, Git, GitHub, Postgres, Docker, browser, web fetch). Versions are pinned.
+- Queries: 12 sample queries, written before reading tool descriptions.
+- Candidates judged per query: the top 10 results of a BM25 keyword search, plus tools added by hand that can do the job but the search missed.
+- Judging: relevance judgments were made by an LLM following a written rubric. A human check and a second-pass consistency check are part of the contract below.
+
+Relevance scale
+3 = does the request, or one required step of a multi-step request, by itself.
+2 = does it partly, or only with extra steps.
+1 = related, but cannot do the request.
+0 = not relevant (not listed below).
+Note: for multi-step requests, grade 3 means a tool fully does one required step. This is slightly broader than "accomplishes the whole request."
+
+Server labels: FS-ref and Git-ref are the official reference servers. Other labels are the vendor or author name.
+
+Early observation: BM25 alone often misses relevant tools. For queries 3 and 4, its top 10 contained 0 of the 5 relevant tools we found.
+
+Q1. List all tables in my local Postgres database
+Narrative: The user wants the names of the tables in a running local database.
+Grade 3: list_tables (PG-antonorlov), pg_list_tables (PG-YawLabs)
+Grade 2: pg_query, pg_readonly (PG-YawLabs), query (PG-antonorlov). Each needs a hand-written catalog query.
+Grade 1: list_schemas (PG-antonorlov), pg_list_schemas (PG-YawLabs)
+
+Q2. Show me the commits made on this repo yesterday
+Narrative: The user wants the commit list for yesterday, filtered by date.
+Grade 3: git_log (Git-ref), git_log (Git-cyanheads), list_commits (GitHub)
+Grade 2: search_commits (GitHub). Default branch only.
+Grade 1: git_show (Git-cyanheads), git_diff (Git-ref), git_diff (Git-cyanheads)
+
+Q3. Scan this repo's history for leaked API keys or passwords
+Narrative: The user wants every past commit checked for secrets, including ones deleted later. No tool in the collection scans for secrets directly.
+Grade 3: none
+Grade 2: git_log, git_show, git_diff (Git-cyanheads), git_show, git_diff (Git-ref). They show past changes; the agent must spot the keys.
+Grade 1: git_log (Git-ref), search_code (GitHub), search_text (FS-j0hanz). They list commits without content, or search only current files.
+
+Q4. Look up the Terraform getting-started docs
+Narrative: The user wants to read HashiCorp's getting-started guide. The collection has no web search or Terraform docs tool.
+Grade 3: none
+Grade 2: fetch (Fetch-ref), fetch_reader, fetch_html_to_markdown (Fetch-YawLabs), browser_navigate (Playwright), navigate_page (ChromeDevTools). They work if the agent knows or finds the URL.
+Grade 1: docs_lookup (Docker-L337), search_repositories (GitHub)
+
+Q5. Fetch the pricing page at this URL and give me the prices as a table
+Narrative: The user gives a URL and wants the prices pulled out.
+Grade 3: fetch (Fetch-ref), fetch_html_to_markdown, fetch_html_to_text, fetch_reader (Fetch-YawLabs)
+Grade 2: http_get (Fetch-YawLabs), navigate_page, new_page, take_snapshot (ChromeDevTools), browser_navigate, browser_snapshot (Playwright). Raw HTML, or two steps (open, then read).
+Grade 1: fetch_meta (Fetch-YawLabs). Title and description only.
+
+Q6. Run my test suite in an isolated container and show any failures
+Narrative: The user wants tests run in a fresh container and wants to see the failures.
+Grade 3: container_run (Docker-L337)
+Grade 2: compose_run, container_exec, container_logs, compose_logs (Docker-L337), exec_command, container_logs (Docker-ofershap). Each covers part of the job or needs an existing container.
+Grade 1: container_start (Docker-L337). Cannot create a container.
+
+Q7. Find the spending report files and move them to a new folder called expenditure
+Narrative: Three steps: find the files, create the folder, move the files.
+Grade 3: search_files, create_directory, move_file (FS-ref), find_files, create, move (FS-j0hanz). Each fully does one step.
+Grade 2: list_directory (FS-ref), list (FS-j0hanz). Can find files by browsing, with extra work.
+Grade 1: search_text, stat (FS-j0hanz)
+
+Q8. Create a new branch, commit my changes, and open a pull request
+Narrative: Branch, stage, commit, push, then open a pull request. Git-ref cannot push, so it covers only the local steps.
+Grade 3: git_create_branch, git_checkout, git_add, git_commit (Git-ref), git_checkout, git_branch, git_add, git_commit, git_push (Git-cyanheads), create_pull_request (GitHub). Each fully does one step.
+Grade 2: create_branch, push_files (GitHub). Remote only, or the agent must send file contents.
+Grade 1: update_pull_request_branch (GitHub)
+
+Q9. List the open issues on this repo that I'm tagged in
+Narrative: The user wants open issues where they are mentioned or assigned. No tool filters by mention in one call.
+Grade 3: none
+Grade 2: list_issues, search_issues, get_me (GitHub). The agent finds the user's login, then lists and filters.
+Grade 1: issue_read, search_pull_requests (GitHub), new_page (ChromeDevTools)
+
+Q10. Open this repo's issues page in a browser and take a screenshot
+Narrative: Two steps: open the page, then take a screenshot.
+Grade 3: browser_navigate, browser_take_screenshot (Playwright), navigate_page, new_page, take_screenshot (ChromeDevTools). Each fully does one step.
+Grade 1: browser_snapshot (Playwright), take_snapshot, list_pages (ChromeDevTools), list_issues (GitHub). Text snapshots or no browser.
+
+Q11. Fill out the signup form on this page with test data and submit it
+Narrative: Fill the fields, then submit.
+Grade 3: browser_fill_form, browser_click (Playwright), fill_form, click (ChromeDevTools)
+Grade 2: browser_type, browser_press_key, browser_snapshot, browser_navigate (Playwright), fill, type_text, press_key, take_snapshot, navigate_page (ChromeDevTools). One field per call, or a helper step.
+Grade 1: none
+
+Q12. Add the "bug" label to issue 42 and assign it to me
+Narrative: The user wants one issue labeled and assigned to themselves.
+Grade 3: issue_write (GitHub)
+Grade 2: get_me (GitHub). Looks up the user's login, but applies no label.
+Grade 1: assign_copilot_to_issue, issue_read, get_label, ui_get (GitHub)
+
+PART 2. GRADE CONTRACT
+Each milestone is something we do, not a result we must reach.
+
+B
+- Collection of at least 300 tools from at least 6 categories, with server versions pinned and retrieval date recorded.
+- 40 queries, each written before reading tool descriptions, each with a narrative stating what counts as relevant.
+- Candidate pools built from BM25 plus one off-the-shelf retriever.
+- Relevance judgments on the 0 to 3 scale from an LLM under a written rubric. LLM use is disclosed in the report.
+- A BM25 baseline run on all queries and scored with nDCG@10 and Recall@k.
+- Final report covering the task, queries, relevance criteria, and baseline results.
+
+B+ (everything in B, plus)
+- Hybrid retrieval: BM25 plus dense embeddings over tool name, description, and parameter schema, merged with reciprocal rank fusion.
+- Comparison of BM25, dense-only, and hybrid on the same queries.
+- LLM consistency check: a second LLM pass re-judges a sample of at least 100 query-tool pairs. We report weighted Cohen's kappa (a standard measure of agreement between two judges).
+
+A- (everything in B+, plus)
+- Equivalence groups: functionally equivalent tools across servers labeled together under a written rule, including how partial overlap is handled.
+- α-nDCG over those groups (an nDCG variant that penalizes repeating the same function), plus an analysis of how much redundancy the baselines return.
+- Human validity check: the team hand-judges at least 50 query-tool pairs, with extra weight on tools the LLM added by hand, and reports weighted kappa against the LLM judgments.
+
+A (everything in A-, plus)
+- A duplicate-aware reranker that detects equivalent tools and reorders results to cover distinct capabilities.
+- Evaluation of the reranker against the hybrid system using α-nDCG, and nDCG@10 to show whether relevance is lost.
+- Error analysis of where the reranker helps and where it fails.
+- Scale-up to 50 queries and up to 500 tools, with 3 to 5 servers per category.
+
+Stretch goals (not required for any grade): normalizing tool descriptions before indexing, and decomposing multi-step queries.
+
+PART 3. BARRIERS
+1. Reaching full collection scale. The collection is at 384 tools from 13 servers, below the 500-tool target. Some servers need credentials to start, and finding more runnable servers per category may take time. Plan: use dummy credentials to list tools, and fall back to the official README tool list, clearly labeled, when a server will not start.
+2. Tool lists change by version. One source lists the official filesystem server with 12 tools and another with 14. Plan: pin every version and record the retrieval date.
+3. Equivalence labeling is subjective. Tools can overlap only partly, for example one reads a whole file while another also supports reading the first or last lines. Plan: a written rule for what counts as equivalent, with a defined partial case.
+4. Running third-party servers is a security risk. Plan: run all servers in a container, with no access to personal files or credentials.
